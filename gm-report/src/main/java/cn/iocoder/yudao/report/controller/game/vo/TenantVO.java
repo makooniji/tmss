@@ -1,0 +1,129 @@
+package cn.iocoder.yudao.report.controller.game.vo;
+
+import cn.iocoder.yudao.framework.common.enums.CommonStatusEnum;
+import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
+import cn.iocoder.yudao.framework.mybatis.core.type.StringListTypeHandler;
+import com.baomidou.mybatisplus.annotation.TableField;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * 租户 DO
+ *
+ * @author osca
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class TenantVO extends BaseDO {
+
+    /**
+     * 套餐编号 - 系统
+     */
+    public static final Long PACKAGE_ID_SYSTEM = 0L;
+
+    /**
+     * 租户编号，自增
+     */
+    private Long id;
+    /**
+     * 租户名，唯一
+     */
+    private String name;
+
+    /**
+     * 父租户编号
+     */
+    private Long parentId;
+
+    private String code;
+    /**
+     * 联系人的用户编号
+     * <p>
+     * 关联 {@link AdminUserDO#getId()}
+     */
+    private Long contactUserId;
+    /**
+     * 联系人
+     */
+    private String contactName;
+    /**
+     * 联系手机
+     */
+    private String contactMobile;
+    /**
+     * 租户状态
+     * <p>
+     * 枚举 {@link CommonStatusEnum}
+     */
+    private Integer status;
+    /**
+     * 绑定域名列表
+     * <p>
+     * 1. 考虑到对微信小程序的兼容，也允许传递 appid
+     * 2. 为什么是数组，考虑到管理后台、会员前台都有独立的域名，又或者多个管理后台
+     */
+    @TableField(typeHandler = StringListTypeHandler.class)
+    private List<String> websites;
+    /**
+     * 租户套餐编号
+     * <p>
+     * 关联 {@link TenantPackageDO#getId()}
+     * 特殊逻辑：系统内置租户，不使用套餐，暂时使用 {@link #PACKAGE_ID_SYSTEM} 标识
+     */
+    private Long packageId;
+    /**
+     * 过期时间
+     */
+    private LocalDateTime expireTime;
+    /**
+     * 账号数量
+     */
+    private Integer accountCount;
+
+    /**
+     * 商户KEY
+     */
+    private String tenantKey;
+    /**
+     * 商户私钥
+     */
+    private String secretKey;
+    /**
+     * 开通的货币
+     */
+    @TableField(typeHandler = StringListTypeHandler.class)
+    private List<String> currency;
+
+    /**
+     * 回调地址
+     */
+    private String notifyUrl;
+
+    /**
+     * 开启的场馆
+     */
+    @TableField(typeHandler = StringListTypeHandler.class)
+    private List<String> vendorCodes;
+    /**
+     * 开启的游戏
+     */
+    @TableField(typeHandler = StringListTypeHandler.class)
+    private List<String> gameCodes;
+
+
+    /**
+     * 接入方式0 免转 1转入
+     */
+    private Integer implType = 0;
+    /**
+     * ip加白
+     */
+    @TableField(typeHandler = StringListTypeHandler.class)
+    private List<String> ipAddress;
+
+}

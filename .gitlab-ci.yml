@@ -1,0 +1,97 @@
+# Main GitLab CI configuration
+# This file includes the separate bytebase configuration files
+
+stages:
+  - sql-review
+  - deploy
+
+variables:
+  BYTEBASE_URL: "https://bytebase.iaming-fun.com"
+  BYTEBASE_SERVICE_ACCOUNT: "api@service.bytebase.com"
+  BYTEBASE_SERVICE_ACCOUNT_SECRET: "bbs_L9B2wVqxnJpwVrbupGzI"
+  BYTEBASE_PROJECT: projects/gnhkzm
+  FILE_PATTERN: migrations/*.sql
+
+# ----------------------------------------------------------------------
+# 1. 门禁阶段：创建指向 test 或 main 的合并请求时，强行触发 SQL 自动审核
+# ----------------------------------------------------------------------
+sql-review:
+  stage: sql-review
+  image:
+    name: bytebase/bytebase-action:latest
+  variables:
+    # 审核时也需要指定目标数据库，用来做 schema 变更合规性检查
+    BYTEBASE_TARGETS: "instances/dvbn/databases/game_manager"
+  script:
+    - echo "=== 正在对提交的 SQL 进行自动合规性与语法审核 ==="
+    - |
+      bytebase-action check \
+        --url "$BYTEBASE_URL" \
+        --service-account "$BYTEBASE_SERVICE_ACCOUNT" \
+        --service-account-secret "$BYTEBASE_SERVICE_ACCOUNT_SECRET" \
+        --project "$BYTEBASE_PROJECT" \
+        --targets "$BYTEBASE_TARGETS" \
+        --file-pattern "$FILE_PATTERN"
+  rules:
+    # 只要发起了指向 test 分支或 main 分支的合并请求，且改动了 sql 文件，就强制审核
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "test" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main")'
+      changes:
+        - $FILE_PATTERN
+
+
+# ----------------------------------------------------------------------
+# 2. 合并到 test 分支：自动创建计划并部署到测试环境
+# ----------------------------------------------------------------------
+deploy-to-test:
+  stage: deploy
+  image:
+    name: bytebase/bytebase-action:latest
+  environment: test
+  variables:
+    BYTEBASE_TARGETS: "instances/dvbn/databases/game_manager"
+    BYTEBASE_TARGET_STAGE: "environments/test"
+  script:
+    - echo "=== 检测到 test 分支更新，开始自动部署测试环境 ==="
+    - |
+      bytebase-action rollout \
+        --url "$BYTEBASE_URL" \
+        --service-account "$BYTEBASE_SERVICE_ACCOUNT" \
+        --service-account-secret "$BYTEBASE_SERVICE_ACCOUNT_SECRET" \
+        --project "$BYTEBASE_PROJECT" \
+        --targets "$BYTEBASE_TARGETS" \
+        --target-stage "$BYTEBASE_TARGET_STAGE" \
+        --file-pattern "$FILE_PATTERN"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "test" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - $FILE_PATTERN
+
+# ----------------------------------------------------------------------
+# 3. 合并到 main 分支：发起生产部署，并挂起等待 项目管理/DBA 审核
+# ----------------------------------------------------------------------
+deploy-to-prod:
+  stage: deploy
+  image:
+    name: bytebase/bytebase-action:latest
+  environment: prod
+  variables:
+    # ⚠️ 如果正式环境是另一个数据库实例，记得把这里的 targets 改掉
+    BYTEBASE_TARGETS: "instances/dvbn/databases/game_manager"
+    BYTEBASE_TARGET_STAGE: "environments/prod"
+  script:
+    - echo "=== 检测到 main 分支更新，正在向 Bytebase 发起生产工单 ==="
+    - echo "GitLab 流水线已挂起，请联系 项目管理 或 DBA 登录 Bytebase 网页端进行审核..."
+    - |
+      bytebase-action rollout \
+        --url "$BYTEBASE_URL" \
+        --service-account "$BYTEBASE_SERVICE_ACCOUNT" \
+        --service-account-secret "$BYTEBASE_SERVICE_ACCOUNT_SECRET" \
+        --project "$BYTEBASE_PROJECT" \
+        --targets "$BYTEBASE_TARGETS" \
+        --target-stage "$BYTEBASE_TARGET_STAGE" \
+        --file-pattern "$FILE_PATTERN" \
+        --timeout 30m
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - $FILE_PATTERN
