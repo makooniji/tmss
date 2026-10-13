@@ -1,0 +1,102 @@
+server:
+  port: 8080
+
+--- #################### 数据库相关配置 ####################
+
+spring:
+  autoconfigure:
+    # noinspection SpringBootApplicationYaml
+    exclude:
+      - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration # 禁用 AI 模块的 Qdrant，手动创建
+      - org.springframework.ai.vectorstore.milvus.autoconfigure.MilvusVectorStoreAutoConfiguration # 禁用 AI 模块的 Milvus，手动创建
+  # 数据源配置项
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    dynamic: # 多数据源配置
+      primary: master
+      datasource:
+        master:
+          url: jdbc:mysql://mycluster-test.mysql-cluster-test.svc.cluster.local:6446/game_manager_test?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
+          username: game_manager
+          password: manager&fhg..
+        slave: # 模拟从库，可根据自己需要修改 # 模拟从库，可根据自己需要修改
+          lazy: true # 开启懒加载，保证启动速度
+          url: jdbc:mysql://mycluster-test.mysql-cluster-test.svc.cluster.local:6446/game_manager_test?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
+          username: game_manager
+          password: manager&fhg..
+
+      hikari:
+        # 最大连接池数量
+        maxPoolSize: 20
+        # 最小空闲线程数量
+        minIdle: 10
+        # 配置获取连接等待超时的时间
+        connectionTimeout: 30000
+        # 校验超时时间
+        validationTimeout: 5000
+        # 空闲连接存活最大时间，默认10分钟
+        idleTimeout: 600000
+        # 此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认30分钟
+        maxLifetime: 1800000
+        # 多久检查一次连接的活性
+        keepaliveTime: 30000
+  # Redis 配置。Redisson 默认的配置足够使用，一般不需要进行调优
+  data:
+    redis:
+      host: redis-0.redis.test.svc.cluster.local # 地址
+      port: 6379 # 端口
+      database: 9 # 数据库索引
+      password: foobared # 密码，建议生产环境开启
+
+--- #################### 消息队列相关 ####################
+spring:
+  # Kafka 配置项，对应 KafkaProperties 配置类
+  kafka:
+    bootstrap-servers: kafka-service.kafka.svc.cluster.local:9092 # 指定 Kafka Broker 地址，可以设置多个，以逗号分隔
+    # Kafka Streams 专有配置
+    streams:
+      application-id: gm-streams-${spring.profiles.active} # 拓扑应用唯一ID
+      bootstrap-servers: kafka-service.kafka.svc.cluster.local:9092
+      properties:
+        # 默认的序列化/反序列化器（全部设为 String，像我们之前设计的工厂一样，绝对安全）
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+
+--- #################### 服务保障相关配置 ####################
+
+# 日志文件配置
+logging:
+  logstash: logstash.es.svc.cluster.local:5044
+  file:
+    name: ./logs/${spring.application.name}.log # 日志文件名，全路径
+
+# Lock4j 配置项
+lock4j:
+  acquire-timeout: 3000 # 获取分布式锁超时时间，默认为 3000 毫秒
+  expire: 30000 # 分布式锁的超时时间，默认为 30 毫秒
+
+--- #################### 芋道相关配置 ####################
+
+# 芋道配置项，设置当前项目所有自定义的配置
+yudao:
+  captcha:
+    enable: false # 本地环境，暂时关闭图片验证码，方便登录等接口的测试；
+  security:
+    mock-enable: true
+  pay:
+    order-notify-url: https://yutou.mynatapp.cc/admin-api/pay/notify/order # 支付渠道的【支付】回调地址
+    refund-notify-url: https://yutou.mynatapp.cc/admin-api/pay/notify/refund # 支付渠道的【退款】回调地址
+    transfer-notify-url: https://yutou.mynatapp.cc/admin-api/pay/notify/transfer # 支付渠道的【转账】回调地址
+  access-log: # 访问日志的配置项
+    enable: true
+  demo: false # 关闭演示模式
+  wxa-code:
+    env-version: develop # 小程序版本: 正式版为 "release"；体验版为 "trial"；开发版为 "develop"
+  wxa-subscribe-message:
+    miniprogram-state: developer # 跳转小程序类型：开发版为 “developer”；体验版为 “trial”为；正式版为 “formal”
+  tencent-lbs-key: TVDBZ-TDILD-4ON4B-PFDZA-RNLKH-VVF6E # QQ 地图的密钥 https://lbs.qq.com/service/staticV2/staticGuide/staticDoc
+
+mybatis-plus:
+  configuration:
+    # 指定日志实现为标准控制台输出
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl

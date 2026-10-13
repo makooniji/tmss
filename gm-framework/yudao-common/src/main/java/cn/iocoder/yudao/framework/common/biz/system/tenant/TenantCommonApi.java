@@ -24,7 +24,10 @@ public interface TenantCommonApi {
     void validateTenant(Long id);
 
     /**
-     * 获得指定租户的数据库查询范围（当前租户 + 直属代理）
+     * 获得指定租户的数据库查询范围（当前租户 + 直属代理）。
+     * <p>
+     * 供业务显式扩展查询范围；一般调用 {@link cn.iocoder.yudao.module.system.service.TenantService#getVisibleTenantIds()} 即可
+     *（会同步写入拦截器所需的租户范围）。
      *
      * 系统租户返回 {@code null}，表示不扩展为 IN 条件；代理返回仅含自身的列表；租户返回自身及直属代理。
      *

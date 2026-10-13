@@ -23,7 +23,6 @@ public class WebProperties {
 
     private Api gateWayApi = new Api("/gateway", "**.gateway.controller.**");
 
-    @NotNull(message = "Admin UI 不能为空")
     private Ui adminUi;
 
     @Data

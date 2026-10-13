@@ -1,11 +1,13 @@
 package cn.iocoder.yudao.framework.security.core;
 
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.map.MapUtil;
 import cn.iocoder.yudao.framework.common.enums.UserTypeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,8 @@ public class LoginUser {
     public static final String INFO_KEY_NICKNAME = "nickname";
     public static final String INFO_KEY_DEPT_ID = "deptId";
     public static final String INFO_KEY_TENANT_ID = "tenantId";
+    public static final String INFO_KEY_ROLE_ID = "roleId";
+
 
 
     /**
@@ -36,7 +40,7 @@ public class LoginUser {
     /**
      * 额外的用户信息
      */
-    private Map<String, String> info;
+    private Map<String, Object> info;
     /**
      * 租户编号
      */
@@ -58,6 +62,12 @@ public class LoginUser {
      */
     @JsonIgnore
     private Map<String, Object> context;
+
+    private List<Long> roleIds;
+    public List<Long> getRoleIds() {
+        return info != null ? MapUtil.get(info, LoginUser.INFO_KEY_ROLE_ID, new TypeReference<>() {
+        }) : new ArrayList<>();
+    }
     /**
      * 访问的租户编号
      */

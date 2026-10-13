@@ -1,15 +1,20 @@
 package cn.iocoder.yudao.framework.web.config;
 
 import cn.hutool.core.util.StrUtil;
-import cn.iocoder.yudao.framework.common.biz.infra.logger.ApiErrorLogCommonApi;
+
+import cn.iocoder.yudao.framework.common.biz.logger.ApiErrorLogCommonApi;
 import cn.iocoder.yudao.framework.common.enums.WebFilterOrderEnum;
 import cn.iocoder.yudao.framework.web.core.filter.CacheRequestBodyFilter;
+import cn.iocoder.yudao.framework.web.coinType.CoinTypeInterceptor;
 import cn.iocoder.yudao.framework.web.core.filter.DemoFilter;
 import cn.iocoder.yudao.framework.web.core.filter.LangInterceptor;
 import cn.iocoder.yudao.framework.web.core.handler.GlobalExceptionHandler;
 import cn.iocoder.yudao.framework.web.core.handler.GlobalResponseBodyHandler;
 import cn.iocoder.yudao.framework.web.core.util.WebFrameworkUtils;
 
+import cn.iocoder.yudao.framework.web.currency.CurrencyInterceptor;
+import cn.iocoder.yudao.framework.web.zone.ZoneInterceptor;
+import cn.iocoder.yudao.framework.web.zone.ZoneTypeAnnotationFormatterFactory;
 import com.google.common.collect.Maps;
 import jakarta.servlet.Filter;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +28,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -41,16 +47,33 @@ import java.util.function.Predicate;
 public class YudaoWebAutoConfiguration {
 
     @Bean
+    public ZoneTypeAnnotationFormatterFactory zoneTypeAnnotationFormatterFactory() {
+        return new ZoneTypeAnnotationFormatterFactory();
+    }
+    @Bean
     public LangInterceptor langInterceptor() {
         return new LangInterceptor();
     }
+
     @Bean
-    public WebMvcConfigurer langWebMvcConfigurer(LangInterceptor langInterceptor) {
+    public WebMvcConfigurer langWebMvcConfigurer(LangInterceptor langInterceptor, CoinTypeInterceptor coinTypeInterceptor,
+                                                 CurrencyInterceptor currencyInterceptor, ZoneInterceptor zoneInterceptor,ZoneTypeAnnotationFormatterFactory zoneTypeAnnotationFormatterFactory) {
         return new WebMvcConfigurer() {
             @Override
             public void addInterceptors(InterceptorRegistry registry) {
                 registry.addInterceptor(langInterceptor)
                         .addPathPatterns("/**");
+                registry.addInterceptor(coinTypeInterceptor)
+                        .addPathPatterns("/**");
+                registry.addInterceptor(currencyInterceptor)
+                        .addPathPatterns("/**");
+                registry.addInterceptor(zoneInterceptor)
+                        .addPathPatterns("/**");
+            }
+            @Override
+            public void addFormatters(FormatterRegistry registry) {
+                // 注册 ZoneType 注解格式化器（解决 GET / Query 请求参数自动时区转换）
+                registry.addFormatterForFieldAnnotation(zoneTypeAnnotationFormatterFactory);
             }
         };
     }
@@ -63,6 +86,8 @@ public class YudaoWebAutoConfiguration {
     @Bean
     public WebMvcRegistrations webMvcRegistrations(WebProperties webProperties) {
         return new WebMvcRegistrations() {
+
+
 
             @Override
             public RequestMappingHandlerMapping getRequestMappingHandlerMapping() {

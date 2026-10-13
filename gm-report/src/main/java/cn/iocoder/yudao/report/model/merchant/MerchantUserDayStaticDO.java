@@ -27,7 +27,7 @@ public class MerchantUserDayStaticDO implements Serializable {
     /**
      * 主键
      */
-    @TableId(type = IdType.ASSIGN_UUID)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
      * 时间维度

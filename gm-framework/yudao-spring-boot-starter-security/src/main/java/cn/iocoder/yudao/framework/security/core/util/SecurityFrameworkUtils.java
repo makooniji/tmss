@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.framework.security.core.util;
 
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
@@ -15,6 +16,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * 安全服务工具类
@@ -118,6 +120,12 @@ public class SecurityFrameworkUtils {
     public static Long getLoginUserTenantId() {
         LoginUser loginUser = getLoginUser();
         return loginUser != null ? MapUtil.getLong(loginUser.getInfo(), LoginUser.INFO_KEY_TENANT_ID) : null;
+    }
+
+    public static List<Long> getLoginUserRole() {
+        LoginUser loginUser = getLoginUser();
+        return loginUser != null ? MapUtil.get(loginUser.getInfo(), LoginUser.INFO_KEY_ROLE_ID, new TypeReference<>() {
+        }) : null;
     }
 
     /**

@@ -19,7 +19,7 @@ public interface MemberAuthService {
      * @param reqVO 登录信息
      * @return 登录结果
      */
-    AppAuthLoginRespVO login(@Valid AppAuthLoginReqVO reqVO);
+    cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO login(@Valid AppAuthLoginReqVO reqVO);
 
     /**
      * 基于 token 退出登录
@@ -34,7 +34,7 @@ public interface MemberAuthService {
      * @param reqVO    登陆信息
      * @return 登录结果
      */
-    AppAuthLoginRespVO smsLogin(@Valid AppAuthSmsLoginReqVO reqVO);
+    cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO smsLogin(@Valid AppAuthSmsLoginReqVO reqVO);
 
     /**
      * 社交登录，使用 code 授权码
@@ -42,15 +42,7 @@ public interface MemberAuthService {
      * @param reqVO 登录信息
      * @return 登录结果
      */
-    AppAuthLoginRespVO socialLogin(@Valid AppAuthSocialLoginReqVO reqVO);
-
-    /**
-     * 微信小程序的一键登录
-     *
-     * @param reqVO 登录信息
-     * @return 登录结果
-     */
-    AppAuthLoginRespVO weixinMiniAppLogin(AppAuthWeixinMiniAppLoginReqVO reqVO);
+    cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO socialLogin(@Valid AppAuthSocialLoginReqVO reqVO);
 
     /**
      * 获得社交认证 URL
@@ -83,6 +75,6 @@ public interface MemberAuthService {
      * @param refreshToken 刷新令牌
      * @return 登录结果
      */
-    AppAuthLoginRespVO refreshToken(String refreshToken);
+    cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO refreshToken(String refreshToken);
 
 }

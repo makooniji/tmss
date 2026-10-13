@@ -5,27 +5,26 @@ import cn.iocoder.yudao.framework.common.biz.system.oauth2.OAuth2TokenCommonApi;
 import cn.iocoder.yudao.framework.common.biz.system.oauth2.dto.OAuth2AccessTokenCreateReqDTO;
 import cn.iocoder.yudao.framework.common.biz.system.oauth2.dto.OAuth2AccessTokenRespDTO;
 import cn.iocoder.yudao.framework.common.enums.CommonStatusEnum;
-import cn.iocoder.yudao.framework.common.enums.TerminalEnum;
 import cn.iocoder.yudao.framework.common.enums.UserTypeEnum;
 import cn.iocoder.yudao.framework.common.util.monitor.TracerUtils;
 import cn.iocoder.yudao.framework.common.util.servlet.ServletUtils;
+import cn.iocoder.yudao.framework.social.dto.SocialUserBindReqDTO;
+import cn.iocoder.yudao.framework.social.dto.SocialUserRespDTO;
 import cn.iocoder.yudao.module.member.controller.app.auth.vo.*;
 import cn.iocoder.yudao.module.member.convert.auth.AuthConvert;
 import cn.iocoder.yudao.module.member.dal.dataobject.user.MemberUserDO;
 import cn.iocoder.yudao.module.member.service.user.MemberUserService;
-import cn.iocoder.yudao.module.system.api.logger.LoginLogApi;
-import cn.iocoder.yudao.module.system.api.logger.dto.LoginLogCreateReqDTO;
-import cn.iocoder.yudao.module.system.api.sms.SmsCodeApi;
-import cn.iocoder.yudao.module.system.api.social.SocialClientApi;
-import cn.iocoder.yudao.module.system.api.social.SocialUserApi;
-import cn.iocoder.yudao.module.system.api.social.dto.SocialUserBindReqDTO;
-import cn.iocoder.yudao.module.system.api.social.dto.SocialUserRespDTO;
-import cn.iocoder.yudao.module.system.api.social.dto.SocialWxPhoneNumberInfoRespDTO;
-import cn.iocoder.yudao.module.system.enums.logger.LoginLogTypeEnum;
-import cn.iocoder.yudao.module.system.enums.logger.LoginResultEnum;
+import cn.iocoder.yudao.framework.log.biz.LoginLogApi;
+import cn.iocoder.yudao.framework.log.dto.LoginLogCreateReqDTO;
+import cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO;
+import cn.iocoder.yudao.module.system.sms.SmsCodeApi;
+import cn.iocoder.yudao.framework.social.service.SocialClientApi;
+import cn.iocoder.yudao.framework.social.service.SocialUserApi;
+
+import cn.iocoder.yudao.framework.log.enums.LoginLogTypeEnum;
+import cn.iocoder.yudao.framework.log.enums.LoginResultEnum;
 import cn.iocoder.yudao.module.system.enums.oauth2.OAuth2ClientConstants;
 import cn.iocoder.yudao.module.system.enums.sms.SmsSceneEnum;
-import cn.iocoder.yudao.module.system.enums.social.SocialTypeEnum;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -132,25 +131,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
         return createTokenAfterLoginSuccess(user, user.getMobile(), LoginLogTypeEnum.LOGIN_SOCIAL, socialUser.getOpenid());
     }
 
-    @Override
-    public AppAuthLoginRespVO weixinMiniAppLogin(AppAuthWeixinMiniAppLoginReqVO reqVO) {
-        // 获得对应的手机号信息
-        SocialWxPhoneNumberInfoRespDTO phoneNumberInfo = socialClientApi.getWxMaPhoneNumberInfo(
-                UserTypeEnum.MEMBER.getValue(), reqVO.getPhoneCode());
-        Assert.notNull(phoneNumberInfo, "获得手机信息失败，结果为空");
 
-        // 获得获得注册用户
-        MemberUserDO user = userService.createUserIfAbsent(phoneNumberInfo.getPurePhoneNumber(),
-                getClientIP(), TerminalEnum.WECHAT_MINI_PROGRAM.getTerminal());
-        Assert.notNull(user, "获取用户失败，结果为空");
-
-        // 绑定社交用户
-        String openid = socialUserApi.bindSocialUser(new SocialUserBindReqDTO(user.getId(), getUserType().getValue(),
-                SocialTypeEnum.WECHAT_MINI_PROGRAM.getType(), reqVO.getLoginCode(), reqVO.getState()));
-
-        // 创建 Token 令牌，记录登录日志
-        return createTokenAfterLoginSuccess(user, user.getMobile(), LoginLogTypeEnum.LOGIN_SOCIAL, openid);
-    }
 
     private AppAuthLoginRespVO createTokenAfterLoginSuccess(MemberUserDO user, String mobile,
                                                             LoginLogTypeEnum logType, String openid) {

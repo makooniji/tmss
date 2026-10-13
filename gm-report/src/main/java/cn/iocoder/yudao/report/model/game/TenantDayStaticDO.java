@@ -27,7 +27,7 @@ public class TenantDayStaticDO implements Serializable {
     /**
      * 主键
      */
-    @TableId(type = IdType.ASSIGN_UUID)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
      * 时间维度
@@ -97,5 +97,7 @@ public class TenantDayStaticDO implements Serializable {
      * 租户标识
      */
     private Long tenantId;
+
+    private String currency;
 
 }

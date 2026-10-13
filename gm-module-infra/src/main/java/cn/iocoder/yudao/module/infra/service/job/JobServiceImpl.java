@@ -24,7 +24,7 @@ import java.util.Objects;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.containsAny;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.*;
 
 /**
  * 定时任务 Service 实现类

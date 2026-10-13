@@ -3,8 +3,8 @@ package cn.iocoder.yudao.module.tester.controller;
 import cn.iocoder.yudao.framework.common.exception.ServiceException;
 import cn.iocoder.yudao.framework.security.core.LoginUser;
 import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
-import cn.iocoder.yudao.module.system.dal.dataobject.tenant.TenantDO;
-import cn.iocoder.yudao.module.system.service.tenant.TenantService;
+import cn.iocoder.yudao.module.system.model.tenant.TenantDO;
+import cn.iocoder.yudao.module.system.service.TenantService;
 import cn.iocoder.yudao.module.tester.validation.ValidationCaseMapBuilder;
 import cn.iocoder.yudao.module.tester.validation.ValidationMeta;
 import cn.iocoder.yudao.module.tester.validation.ValidationRunRequest;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/tester/map")
@@ -59,6 +60,8 @@ public class ValidationController {
         TenantDO tenant = tenantService.getTenant(loginUser.getTenantId());
         request.setTenantDO(tenant);
         request.setUserId(loginUser.getId());
-        return validationRunner.runAsync(request);
+        String traceId = UUID.randomUUID().toString();
+        validationRunner.runAsync(request, traceId);
+        return traceId;
     }
 }

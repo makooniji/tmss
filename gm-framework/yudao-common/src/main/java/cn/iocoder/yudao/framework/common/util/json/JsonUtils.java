@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.framework.common.util.json;
 
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONUtil;
@@ -222,7 +223,7 @@ public class JsonUtils {
      * @return 转换后的对象
      */
     public static <T> T convertObject(Object obj, Class<T> clazz) {
-        if (obj == null) {
+        if (ObjectUtil.isEmpty( obj)) {
             return null;
         }
         if (clazz.isInstance(obj)) {

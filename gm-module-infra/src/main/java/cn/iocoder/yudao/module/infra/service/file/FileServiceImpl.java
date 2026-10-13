@@ -24,7 +24,7 @@ import java.util.List;
 
 import static cn.hutool.core.date.DatePattern.PURE_DATE_PATTERN;
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.FILE_NOT_EXISTS;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.FILE_NOT_EXISTS;
 
 /**
  * 文件 Service 实现类

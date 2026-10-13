@@ -23,7 +23,7 @@ public class ValidationMeta {
     private String api;
 
     /**
-     * 中文描述
+     * 步骤展示状态（运行后由 WS 更新）：待执行 / 成功 / 失败 / 异常
      */
     private String result;
 
@@ -53,17 +53,18 @@ public class ValidationMeta {
     private String remark;
 
     /**
-     * 预期结果
+     * 规范预期（文档描述，如 成功 / 余额不足），非运行结果
      */
     private String expectedResult;
     /**
-     * 实际结果
+     * 实际商户响应（运行后由 WS 更新）
      */
     private String actualResult;
 
-    public ValidationMeta(String caseCode, String api, String result) {
+    public ValidationMeta(String caseCode, String api, String expectedResult) {
         this.caseCode = caseCode;
         this.api = api;
-        this.result = result;
+        this.expectedResult = expectedResult;
+        this.result = "待执行";
     }
 }

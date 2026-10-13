@@ -1,15 +1,16 @@
 package cn.iocoder.yudao.module.infra.controller.admin.logger;
 
-import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
+import cn.iocoder.yudao.framework.log.core.annotation.ApiAccessLog;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
-import cn.iocoder.yudao.module.infra.controller.admin.logger.vo.apierrorlog.ApiErrorLogPageReqVO;
-import cn.iocoder.yudao.module.infra.controller.admin.logger.vo.apierrorlog.ApiErrorLogRespVO;
-import cn.iocoder.yudao.module.infra.dal.dataobject.logger.ApiErrorLogDO;
-import cn.iocoder.yudao.module.infra.service.logger.ApiErrorLogService;
+
+import cn.iocoder.yudao.framework.log.model.ApiErrorLogDO;
+import cn.iocoder.yudao.framework.log.model.vo.apierrorlog.ApiErrorLogPageReqVO;
+import cn.iocoder.yudao.framework.log.model.vo.apierrorlog.ApiErrorLogRespVO;
+import cn.iocoder.yudao.framework.log.service.ApiErrorLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 
-import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.EXPORT;
+import static cn.iocoder.yudao.framework.log.core.enums.OperateTypeEnum.EXPORT;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 import static cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils.getLoginUserId;
 

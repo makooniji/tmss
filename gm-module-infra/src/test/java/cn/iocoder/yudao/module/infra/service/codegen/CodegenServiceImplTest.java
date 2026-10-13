@@ -41,7 +41,7 @@ import static cn.iocoder.yudao.framework.common.util.object.ObjectUtils.cloneIgn
 import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.assertPojoEquals;
 import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.assertServiceException;
 import static cn.iocoder.yudao.framework.test.core.util.RandomUtils.*;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;

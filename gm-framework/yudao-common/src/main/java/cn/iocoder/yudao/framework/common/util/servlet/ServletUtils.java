@@ -1,24 +1,31 @@
 package cn.iocoder.yudao.framework.common.util.servlet;
 
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.servlet.JakartaServletUtil;
+import cn.hutool.extra.servlet.ServletUtil;
 import cn.iocoder.yudao.framework.common.util.json.JsonUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * 客户端工具类
  *
  * @author osca
  */
-public class ServletUtils {
+@Slf4j
+public class ServletUtils extends JakartaServletUtil {
 
     /**
      * 返回 JSON 字符串
@@ -101,5 +108,94 @@ public class ServletUtils {
     public static Map<String, String> getHeaderMap(HttpServletRequest request) {
         return JakartaServletUtil.getHeaderMap(request);
     }
+
+    public static Map<String, Object> getBodyMap(HttpServletRequest request) {
+        Map<String, Object> result = new LinkedHashMap<>();
+
+        try {
+            String contentType = request.getContentType();
+            log.info("请求方式:{},{}", contentType, request.getHeader("Content-Encoding"));
+
+            if (StrUtil.isNotEmpty(contentType)) {
+                String lowerContentType = contentType.toLowerCase();
+
+                // 1. JSON
+                if (lowerContentType.contains("application/json")) {
+                    String body = IoUtil.read(request.getInputStream(), StandardCharsets.UTF_8);
+                    log.info("body={}", body);
+                    if (StrUtil.isNotEmpty(body)) {
+                        Map<String, Object> map = JsonUtils.parseObject(body, new TypeReference<LinkedHashMap<String, Object>>() {});
+                        if (map != null) {
+                            result.putAll(map);
+                        }
+                    }
+                }
+                // 2. FORM (application/x-www-form-urlencoded)
+                else if (lowerContentType.contains("application/x-www-form-urlencoded")) {
+                    Map<String, String[]> params = request.getParameterMap();
+                    params.forEach((k, v) -> {
+                        if (v == null || v.length == 0) {
+                            result.put(k, null);
+                        } else if (v.length == 1) {
+                            result.put(k, v[0]);
+                        } else {
+                            // 多值转换为 List<String>，便于 JSON 序列化和统一处理
+                            result.put(k, Arrays.asList(v));
+                        }
+                    });
+                }
+                // 3. MULTIPART (multipart/form-data)
+                else if (lowerContentType.contains("multipart/form-data")) {
+                    Collection<Part> parts = request.getParts();
+                    for (Part part : parts) {
+                        String name = part.getName();
+                        String submittedFileName = part.getSubmittedFileName();
+
+                        Object value;
+                        if (StrUtil.isNotEmpty(submittedFileName)) {
+                            // 文件类型：保留 Part 对象本身（或按需改为 part.getInputStream() / byte[]）
+                            value = part;
+                        } else {
+                            // 普通文本字段
+                            value = IoUtil.read(part.getInputStream(), StandardCharsets.UTF_8);
+                        }
+
+                        // 处理同名 Key（如多文件上传或多选框），自动合并为 List
+                        if (result.containsKey(name)) {
+                            Object existing = result.get(name);
+                            if (existing instanceof List) {
+                                ((List<Object>) existing).add(value);
+                            } else {
+                                List<Object> list = new ArrayList<>();
+                                list.add(existing);
+                                list.add(value);
+                                result.put(name, list);
+                            }
+                        } else {
+                            result.put(name, value);
+                        }
+                    }
+                }
+            } else {
+                // 没有 Content-Type（如普通 GET 请求），直接获取 URL 拼接参数
+                Map<String, String[]> params = request.getParameterMap();
+                params.forEach((k, v) -> {
+                    if (v == null || v.length == 0) {
+                        result.put(k, null);
+                    } else if (v.length == 1) {
+                        result.put(k, v[0]);
+                    } else {
+                        result.put(k, Arrays.asList(v));
+                    }
+                });
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("request parse error", e);
+        }
+
+        return result;
+    }
+
 
 }

@@ -20,13 +20,18 @@
     <dependencies>
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
-            <artifactId>gm-module-system</artifactId>
+            <artifactId>gm-module-system-biz</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
             <artifactId>gm-module-infra</artifactId>
             <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-social</artifactId>
         </dependency>
 
         <!-- 业务组件 -->

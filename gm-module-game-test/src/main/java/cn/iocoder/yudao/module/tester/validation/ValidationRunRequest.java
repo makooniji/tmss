@@ -1,6 +1,6 @@
 package cn.iocoder.yudao.module.tester.validation;
 
-import cn.iocoder.yudao.module.system.dal.dataobject.tenant.TenantDO;
+import cn.iocoder.yudao.module.system.model.tenant.TenantDO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 

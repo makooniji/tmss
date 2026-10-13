@@ -5,6 +5,9 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.SortablePageParam;
 import cn.iocoder.yudao.framework.common.pojo.SortingField;
+import cn.iocoder.yudao.framework.common.util.StreamUtils;
+import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaCrudChainWrapper;
 import cn.iocoder.yudao.framework.mybatis.core.util.JdbcUtils;
 import cn.iocoder.yudao.framework.mybatis.core.util.MyBatisUtils;
 import com.baomidou.mybatisplus.annotation.DbType;
@@ -13,6 +16,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.MapperProxyMetadata;
+import com.baomidou.mybatisplus.core.toolkit.MybatisUtils;
+import com.baomidou.mybatisplus.core.toolkit.reflect.GenericTypeUtils;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.yulichang.base.MPJBaseMapper;
@@ -22,6 +28,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * 在 MyBatis Plus 的 BaseMapper 的基础上拓展，提供更多的能力
@@ -30,6 +37,71 @@ import java.util.List;
  * 2. {@link MPJBaseMapper} 为 MyBatis Plus Join 的基础接口，提供连表 Join 能力
  */
 public interface BaseMapperX<T> extends MPJBaseMapper<T> {
+
+    private BaseMapperX<T> mapperProxy() {
+        BaseMapperX<T> mapper = this;
+        try {
+            MapperProxyMetadata metadata = MybatisUtils.getMapperProxy(this);
+            Object proxy = SpringUtils.getBean(metadata.getMapperInterface());
+            if (proxy instanceof BaseMapperX<?>) {
+                mapper = (BaseMapperX<T>) proxy;
+            }
+        } catch (RuntimeException ignored) {
+            // Mapper 可能未托管于 Spring 容器，保留当前对象作为回退。
+        }
+        return mapper;
+    }
+    /**
+     * 创建当前 Mapper 绑定的 Lambda CRUD 链式操作。
+     *
+     * @return Lambda CRUD 链式包装器
+     */
+    default LambdaCrudChainWrapper<T> lambda() {
+        return new LambdaCrudChainWrapper<>(mapperProxy());
+    }
+    /**
+     * Mapper 泛型类型缓存，避免重复解析实体与 VO 类型。
+     */
+    ClassValue<Class<?>[]> TYPE_ARGUMENT_CACHE = new ClassValue<>() {
+        /**
+         * 解析指定 Mapper 类型的实体与 VO 泛型。
+         *
+         * @param type Mapper 类型
+         * @return 泛型类型数组
+         */
+        @Override
+        protected Class<?>[] computeValue(Class<?> type) {
+            return GenericTypeUtils.resolveTypeArguments(type, BaseMapperX.class);
+        }
+    };
+    /**
+     * 获取当前 Mapper 的实体与 VO 泛型类型。
+     *
+     * @return 泛型类型数组
+     */
+    private Class<?>[] currentMapperTypes() {
+        Class<?>[] types = TYPE_ARGUMENT_CACHE.get(this.getClass());
+        return types;
+    }
+    /**
+     * 获取当前实例对象关联的泛型类型 T 的 Class 对象
+     *
+     * @return 返回当前实例对象关联的泛型类型 T 的 Class 对象
+     */
+    default Class<T> currentModelClass() {
+        return (Class<T>) currentMapperTypes()[0];
+    }
+    /**
+     * 根据条件查询符合条件的对象，并将其转换为指定类型的对象列表
+     *
+     * @param wrapper 查询条件Wrapper
+     * @param mapper  转换函数，用于将查询到的对象转换为指定类型的对象
+     * @param <C>     要转换的对象的类型
+     * @return 查询到的符合条件的对象列表，经过转换为指定类型的对象后返回
+     */
+    default <C> List<C> selectObjs(Wrapper<T> wrapper, Function<? super Object, C> mapper) {
+        return StreamUtils.toList(this.selectObjs(wrapper), mapper);
+    }
 
     int insertIgnoreBatch(List<T> list);
 

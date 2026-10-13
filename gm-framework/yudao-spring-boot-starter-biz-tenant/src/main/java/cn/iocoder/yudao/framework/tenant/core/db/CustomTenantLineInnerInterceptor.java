@@ -6,7 +6,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Table;
 
 /**
- * 自定义租户拦截器：将 SQL 租户条件委托给 {@link TenantDatabaseInterceptor} 构建（支持直属代理 IN）
+ * 自定义租户拦截器：将 SQL 租户条件委托给 {@link TenantDatabaseInterceptor} 构建（默认当前租户，可显式扩展）
  */
 public class CustomTenantLineInnerInterceptor extends TenantLineInnerInterceptor {
 

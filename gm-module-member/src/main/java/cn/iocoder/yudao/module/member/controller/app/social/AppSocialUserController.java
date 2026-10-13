@@ -1,13 +1,15 @@
 package cn.iocoder.yudao.module.member.controller.app.social;
 
-import cn.hutool.core.codec.Base64;
 import cn.iocoder.yudao.framework.common.enums.UserTypeEnum;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+
+import cn.iocoder.yudao.framework.social.dto.SocialUserBindReqDTO;
+import cn.iocoder.yudao.framework.social.dto.SocialUserRespDTO;
+import cn.iocoder.yudao.framework.social.dto.SocialUserUnbindReqDTO;
 import cn.iocoder.yudao.module.member.controller.app.social.vo.*;
-import cn.iocoder.yudao.module.system.api.social.SocialClientApi;
-import cn.iocoder.yudao.module.system.api.social.SocialUserApi;
-import cn.iocoder.yudao.module.system.api.social.dto.*;
+import cn.iocoder.yudao.framework.social.service.SocialClientApi;
+import cn.iocoder.yudao.framework.social.service.SocialUserApi;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,8 +18,6 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 import static cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils.getLoginUserId;
@@ -60,20 +60,6 @@ public class AppSocialUserController {
         return success(BeanUtils.toBean(socialUser, AppSocialUserRespVO.class));
     }
 
-    @PostMapping("/wxa-qrcode")
-    @Operation(summary = "获得微信小程序码(base64 image)")
-    @PermitAll
-    public CommonResult<String> getWxaQrcode(@RequestBody @Valid AppSocialWxaQrcodeReqVO reqVO) {
-        byte[] wxQrcode = socialClientApi.getWxaQrcode(BeanUtils.toBean(reqVO, SocialWxQrcodeReqDTO.class));
-        return success(Base64.encode(wxQrcode));
-    }
 
-    @GetMapping("/get-subscribe-template-list")
-    @Operation(summary = "获得微信小程订阅模板列表")
-    @PermitAll
-    public CommonResult<List<AppSocialWxaSubscribeTemplateRespVO>> getSubscribeTemplateList() {
-        List<SocialWxaSubscribeTemplateRespDTO> template = socialClientApi.getWxaSubscribeTemplateList(UserTypeEnum.MEMBER.getValue());
-        return success(BeanUtils.toBean(template, AppSocialWxaSubscribeTemplateRespVO.class));
-    }
 
 }

@@ -19,15 +19,15 @@
     <dependencies>
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
-            <artifactId>gm-module-game</artifactId>
-            <version>2026.01-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>cn.iocoder.boot</groupId>
-            <artifactId>gm-module-infra</artifactId>
+            <artifactId>gm-module-game-biz</artifactId>
             <version>${revision}</version>
         </dependency>
 
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>gm-module-system-api</artifactId>
+            <version>${revision}</version>
+        </dependency>
 
         <!-- spring boot 配置所需依赖 -->
         <dependency>
@@ -39,8 +39,40 @@
         <!-- 服务保障相关 -->
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
-            <artifactId>yudao-spring-boot-starter-protection</artifactId>
+            <artifactId>yudao-spring-boot-starter-permission</artifactId>
         </dependency>
+        <!-- Web 相关 -->
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-log</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- 消息队列相关 -->
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-mq</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-redis</artifactId>
+        </dependency>
+        <!-- DB 相关 -->
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-spring-boot-starter-mybatis</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>

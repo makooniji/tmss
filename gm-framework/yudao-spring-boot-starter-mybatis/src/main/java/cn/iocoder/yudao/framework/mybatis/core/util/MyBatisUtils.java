@@ -48,22 +48,33 @@ public class MyBatisUtils {
         }
         return page;
     }
-
     @SuppressWarnings("PatternVariableCanBeUsed")
     public static <T> void addOrder(Wrapper<T> wrapper, Collection<SortingField> sortingFields) {
         if (CollUtil.isEmpty(sortingFields)) {
             return;
         }
-        if (wrapper instanceof QueryWrapper<T>) {
-            QueryWrapper<T> query = (QueryWrapper<T>) wrapper;
+        // 修改前（备份）：
+        // if (wrapper instanceof QueryWrapper<T>) {
+        //     QueryWrapper<T> query = (QueryWrapper<T>) wrapper;
+        //     for (SortingField sortingField : sortingFields) {
+        //         query.orderBy(true,
+        //                 SortingField.ORDER_ASC.equals(sortingField.getOrder()),
+        //                 StrUtil.toUnderlineCase(sortingField.getField()));
+        //     }
+        // } else if (wrapper instanceof LambdaQueryWrapper<T>) {
+        //     LambdaQueryWrapper<T> lambdaQuery = (LambdaQueryWrapper<T>) wrapper;
+        //
+        // 修改原因：instanceof 不能使用 QueryWrapper<T> / LambdaQueryWrapper<T> 等带泛型参数的形式，
+        // 因为 Java 泛型在运行时会被擦除，T 在 JVM 中不存在，会导致编译失败或运行时报 Unresolved compilation problems。
+        // 因此需使用通配符 QueryWrapper<?> / LambdaQueryWrapper<?>，并通过模式变量直接绑定，无需再强转。
+        if (wrapper instanceof QueryWrapper<?> query) {
             for (SortingField sortingField : sortingFields) {
                 query.orderBy(true,
                         SortingField.ORDER_ASC.equals(sortingField.getOrder()),
                         StrUtil.toUnderlineCase(sortingField.getField()));
             }
-        } else if (wrapper instanceof LambdaQueryWrapper<T>) {
+        } else if (wrapper instanceof LambdaQueryWrapper<?> lambdaQuery) {
             // LambdaQueryWrapper 不直接支持字符串字段排序，使用 last 方法拼接 ORDER BY
-            LambdaQueryWrapper<T> lambdaQuery = (LambdaQueryWrapper<T>) wrapper;
             StringBuilder orderBy = new StringBuilder();
             for (SortingField sortingField : sortingFields) {
                 if (StrUtil.isNotEmpty(orderBy)) {
@@ -130,14 +141,13 @@ public class MyBatisUtils {
      * 跨数据库的 find_in_set 实现
      *
      * @param column 字段名称
-     * @param value  查询值(不带单引号)
      * @return sql
      */
-    public static String findInSet(String column, Object value) {
+    public static String findInSet(String column) {
         DbType dbType = JdbcUtils.getDbType();
         return DbTypeEnum.getFindInSetTemplate(dbType)
                 .replace("#{column}", column)
-                .replace("#{value}", StrUtil.toString(value));
+                .replace("#{value}", "{0}");
     }
 
     /**

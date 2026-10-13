@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.framework.mq.kafka.merchant;
 
-import cn.iocoder.yudao.framework.mq.enums.MessageTypeEnum;
 import cn.iocoder.yudao.framework.mq.kafka.StaticDTO;
 import lombok.Data;
 
@@ -52,11 +51,6 @@ public class MerchantStaticDTO extends StaticDTO {
      * 有效会员数量
      */
     private Long validUserCount;
-
-    /**
-     * 消息类型
-     */
-    private MessageTypeEnum messageType;
 
     private BigDecimal bonus;
 }

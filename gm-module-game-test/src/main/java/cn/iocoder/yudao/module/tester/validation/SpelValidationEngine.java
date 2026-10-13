@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.tester.validation;
 
-import cn.iocoder.yudao.module.system.model.api.SportContext;
-import cn.iocoder.yudao.module.system.model.api.push.DownstreamResult;
+import cn.iocoder.yudao.framework.common.model.game.push.DownstreamResult;
+import cn.iocoder.yudao.module.system.model.game.SportContext;
 import lombok.experimental.UtilityClass;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;

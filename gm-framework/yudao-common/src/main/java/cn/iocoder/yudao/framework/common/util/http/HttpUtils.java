@@ -10,29 +10,33 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.iocoder.yudao.framework.common.exception.ServiceException;
 import cn.iocoder.yudao.framework.common.exception.enums.GlobalErrorCodeConstants;
-import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+
+import org.apache.hc.core5.util.TimeValue;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * HTTP 工具类
@@ -42,7 +46,6 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class HttpUtils extends HttpUtil {
 
-    private static final WebClient webClient = SpringUtils.getBean(WebClient.class);
     /**
      * 编码 URL 参数
      *
@@ -88,12 +91,12 @@ public class HttpUtils extends HttpUtil {
 
     /**
      * 拼接 URL
-     *
+     * <p>
      * copy from Spring Security OAuth2 的 AuthorizationEndpoint 类的 append 方法
      *
-     * @param base 基础 URL
-     * @param query 查询参数
-     * @param keys query 的 key，对应的原本的 key 的映射。例如说 query 里有个 key 是 xx，实际它的 key 是 extra_xx，则通过 keys 里添加这个映射
+     * @param base     基础 URL
+     * @param query    查询参数
+     * @param keys     query 的 key，对应的原本的 key 的映射。例如说 query 里有个 key 是 xx，实际它的 key 是 extra_xx，则通过 keys 里添加这个映射
      * @param fragment URL 的 fragment，即拼接到 # 中
      * @return 拼接后的 URL
      */
@@ -173,11 +176,11 @@ public class HttpUtils extends HttpUtil {
 
     /**
      * HTTP post 请求，基于 {@link cn.hutool.http.HttpUtil} 实现
-     *
+     * <p>
      * 为什么要封装该方法，因为 HttpUtil 默认封装的方法，没有允许传递 headers 参数
      *
-     * @param url URL
-     * @param headers 请求头
+     * @param url         URL
+     * @param headers     请求头
      * @param requestBody 请求体
      * @return 请求结果
      */
@@ -192,10 +195,10 @@ public class HttpUtils extends HttpUtil {
 
     /**
      * HTTP get 请求，基于 {@link cn.hutool.http.HttpUtil} 实现
-     *
+     * <p>
      * 为什么要封装该方法，因为 HttpUtil 默认封装的方法，没有允许传递 headers 参数
      *
-     * @param url URL
+     * @param url     URL
      * @param headers 请求头
      * @return 请求结果
      */
@@ -207,97 +210,99 @@ public class HttpUtils extends HttpUtil {
         }
     }
 
+    // 1. 创建 HttpClient 5 (注意：TimeValue 和 Builder 的包名变了)
+    private final static CloseableHttpClient httpClient = HttpClients.custom()
+            .setConnectionManager(PoolingHttpClientConnectionManagerBuilder.create()
+                    .setMaxConnTotal(200)
+                    .setMaxConnPerRoute(50)
+                    .build())
+            // 关键：避免连接重置 (Connection Reset) 的驱逐策略，Spring Boot 3 支持这样写
+            .evictIdleConnections(TimeValue.of(1, TimeUnit.MINUTES))
+            .build();
 
+    // 2. 声明为全局单例 RestClient
+    private final static RestClient restClient = RestClient.builder()
+            // Spring Boot 3 的这个构造函数完美支持上面的 HttpClient 5
+            .requestFactory(new HttpComponentsClientHttpRequestFactory(httpClient))
+            .build();
+
+    /**
+     * 1. JSON 请求实现 (RestClient 版)
+     */
     public static CompletableFuture<String> doJsonRequest(
             String url, Map<String, Object> param, Map<String, String> header, boolean async) {
 
-        WebClient.RequestBodySpec spec = webClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_JSON);
-
-        if (header != null) {
-            spec.headers(h -> header.forEach(h::add));
-        }
-
-        if (async) {
-            return spec.bodyValue(param)
-
+        // 抽取公共的同步请求逻辑
+        Supplier<String> requestSupplier = () -> {
+            String resp = restClient.post()
+                    .uri(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .headers(httpHeaders -> {
+                        if (header != null) header.forEach(httpHeaders::add);
+                    })
+                    .body(param) // RestClient 会自动将 Map 序列化为 JSON
                     .retrieve()
-                    // 修复：针对 4xx 错误进行显式处理
-                    .onStatus(HttpStatusCode::is4xxClientError, response ->
-                            response.bodyToMono(String.class)
-                                    .flatMap(errorBody -> {
-                                        log.error("下游 4xx 错误: {}, URL: {}", errorBody, url);
-                                        // Java 17 建议抛出具体的业务异常
-                                        return Mono.error(new ServiceException(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR));
-                                    })
-                    )
-                    .bodyToMono(String.class)
-                    .doOnNext(body -> log.info("{}，请求结果 result={}", url, body))
-                    .toFuture();
-        }
+                    .onStatus(HttpStatusCode::isError, (request, response) -> {
+                        String errorBody = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                        log.error("上游请求错误: {}, URL: {}, body：{}", errorBody, url,param);
+                        throw new ServiceException(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR.getCode(),errorBody);
+                    })
+                    .body(String.class);
 
-        String resp = spec.bodyValue(param)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, response ->
-                        response.bodyToMono(String.class)
-                                .flatMap(errorBody -> {
-                                    log.error("下游 4xx 错误: {}, URL: {}", errorBody, url);
-                                    // Java 17 建议抛出具体的业务异常
-                                    return Mono.error(new ServiceException(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR));
-                                })
-                )
-                .bodyToMono(String.class)
-                .block(Duration.ofSeconds(10));
-        log.info("{}，请求结果 result={}", url, resp);
-        return CompletableFuture.completedFuture(resp);
+            log.info("{}，请求结果 result={}", url, resp);
+            return resp;
+        };
+
+        // 根据 async 标志分流
+        if (async) {
+            // 异步：提交到线程池（生产环境建议指定自定义的线程池，如 ForkJoinPool 或自定义 Executor）
+            return CompletableFuture.supplyAsync(requestSupplier);
+        } else {
+            // 同步：直接执行并包裹为已完成的 Future
+            return CompletableFuture.completedFuture(requestSupplier.get());
+        }
     }
+
 
     public static CompletableFuture<JSONObject> doFormRequest(
             String url, Map<String, Object> param, Map<String, String> header, boolean async) {
-        WebClient.RequestBodySpec spec = webClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        if (header != null) {
-            spec.headers(h -> header.forEach(h::add));
-        }
+        // 1. 构建表单数据
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        param.forEach((k, v) -> form.add(k, String.valueOf(v)));
-
-        if (async) {
-            return spec
-                    .body(BodyInserters.fromFormData(form))
-                    .retrieve()
-                    .onStatus(HttpStatusCode::is4xxClientError, response ->
-                            response.bodyToMono(String.class)
-                                    .flatMap(errorBody -> {
-                                        log.error("下游 4xx 错误: {}, URL: {}", errorBody, url);
-                                        // Java 17 建议抛出具体的业务异常
-                                        return Mono.error(new ServiceException(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR));
-                                    })
-                    )
-                    .bodyToMono(String.class)
-                    .doOnNext(body -> log.info("{}，请求结果 result={}", url, body))
-                    .map(JSONObject::parseObject)
-                    .toFuture();
+        if (param != null) {
+            param.forEach((k, v) -> form.add(k, String.valueOf(v)));
         }
 
-        String resp = spec
-                .body(BodyInserters.fromFormData(form))
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, response ->
-                        response.bodyToMono(String.class)
-                                .flatMap(errorBody -> {
-                                    log.error("下游 4xx 错误: {}, URL: {}", errorBody, url);
-                                    // Java 17 建议抛出具体的业务异常
-                                    return Mono.error(new ServiceException(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR));
-                                })
-                )
-                .bodyToMono(String.class)
-                .block(Duration.ofSeconds(20));
-        log.info("{}，请求结果 result={}", url, resp);
-        return CompletableFuture.completedFuture(JSONObject.parseObject(resp));
+        // 2. 抽取公共的同步请求逻辑
+        // 利用 Java 17 的 lambda 和局部变量推导，逻辑非常清晰
+        Supplier<JSONObject> requestSupplier = () -> {
+            String resp = restClient.post()
+                    .uri(url)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .headers(httpHeaders -> {
+                        if (header != null) header.forEach(httpHeaders::add);
+                    })
+                    .body(form)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
+                        // RestClient 的异常处理可以直接抛出，不需要像 Mono 那样包裹
+                        String errorBody = new String(response.getBody().readAllBytes());
+                        log.error("下游 4xx 错误: {}, URL: {}", errorBody, url);
+                        throw new ServiceException(GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR);
+                    })
+                    .body(String.class);
+
+            log.info("{}，请求结果 result={}", url, resp);
+            return JSONObject.parseObject(resp);
+        };
+
+        // 3. 根据 async 标志决定是否走线程池异步
+        if (async) {
+            // Java 17+ 配合虚拟线程（如果你用的是 Java 21 效果更佳），或自定义线程池
+            return CompletableFuture.supplyAsync(requestSupplier);
+        } else {
+            return CompletableFuture.completedFuture(requestSupplier.get());
+        }
     }
 
 }

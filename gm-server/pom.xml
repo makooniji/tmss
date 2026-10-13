@@ -23,14 +23,10 @@
     <dependencies>
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
-            <artifactId>gm-module-system</artifactId>
+            <artifactId>gm-module-system-biz</artifactId>
             <version>${revision}</version>
         </dependency>
-        <dependency>
-            <groupId>cn.iocoder.boot</groupId>
-            <artifactId>gm-module-game</artifactId>
-            <version>${revision}</version>
-        </dependency>
+
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
             <artifactId>gm-module-game-test</artifactId>

@@ -22,7 +22,7 @@ import java.util.List;
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertList;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.diffList;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.DEMO03_STUDENT_NOT_EXISTS;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.DEMO03_STUDENT_NOT_EXISTS;
 
 /**
  * 学生 Service 实现类

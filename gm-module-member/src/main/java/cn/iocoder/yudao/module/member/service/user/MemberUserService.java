@@ -99,14 +99,6 @@ public interface MemberUserService {
     void updateUserMobile(Long userId, AppMemberUserUpdateMobileReqVO reqVO);
 
     /**
-     * 【会员】修改手机，基于微信小程序的授权码
-     *
-     * @param userId 用户编号
-     * @param reqVO 请求信息
-     */
-    void updateUserMobileByWeixin(Long userId, AppMemberUserUpdateMobileByWeixinReqVO reqVO);
-
-    /**
      * 【会员】修改密码
      *
      * @param userId 用户编号

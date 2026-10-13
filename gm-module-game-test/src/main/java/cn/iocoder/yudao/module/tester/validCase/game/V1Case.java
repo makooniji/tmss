@@ -1,13 +1,18 @@
 package cn.iocoder.yudao.module.tester.validCase.game;
 
 import cn.hutool.core.util.IdUtil;
+
+import cn.iocoder.yudao.framework.common.model.game.push.*;
+import cn.iocoder.yudao.framework.common.model.game.push.sports.DSBetRequest;
 import cn.iocoder.yudao.framework.websocket.core.sender.WebSocketMessageSender;
 import cn.iocoder.yudao.module.game.manager.DSManager;
-import cn.iocoder.yudao.module.system.enums.ActionEnum;
-import cn.iocoder.yudao.module.system.model.api.SportContext;
-import cn.iocoder.yudao.module.system.model.api.push.*;
-import cn.iocoder.yudao.module.system.model.api.push.sports.DSBetRequest;
+import cn.iocoder.yudao.framework.common.enums.ActionEnum;
+import cn.iocoder.yudao.framework.common.enums.PlatformCodeEnum;
+
+import cn.iocoder.yudao.module.system.model.game.DSBetResultRequest;
+import cn.iocoder.yudao.module.system.model.game.SportContext;
 import cn.iocoder.yudao.module.tester.flow.FlowBuilder;
+import cn.iocoder.yudao.module.tester.validCase.support.ValidationCaseSupport;
 import cn.iocoder.yudao.module.tester.validation.ValidationCase;
 import cn.iocoder.yudao.module.tester.validation.ValidationResult;
 import cn.iocoder.yudao.module.tester.validation.ValidationRunRequest;
@@ -19,7 +24,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * JLS 平台余额验证案例
+ * 验签失败验证案例
  */
 @Component
 @RequiredArgsConstructor
@@ -28,7 +33,6 @@ public class V1Case implements ValidationCase {
 
     private final DSManager dsManager;
     private final WebSocketMessageSender ws;
-    private final String betRollBackId=IdUtil.fastUUID();
 
     @Override
     public String code() {
@@ -40,23 +44,16 @@ public class V1Case implements ValidationCase {
     public ValidationResult execute(ValidationRunRequest request, SportContext ctx) {
         try {
             List<ValidationResult> details = FlowBuilder.start(ctx,ws)
-                    // 1️⃣ 查询余额
-                    .step("1.01.01", (context -> {
+                    // 1.01 查询余额 -> /wallet/balance
+                    .step("1.01.01", context -> {
                         DSBalance dsBalance = new DSBalance();
-                        dsBalance.setUsername(ctx.getPullUsername());
-
-                        DownstreamResult response =
-                                dsManager.push(ctx, ctx.getTenant(), ActionEnum.BALANCE, dsBalance,IdUtil.nanoId());
-
-                        ctx.setBalance(response.getData().getBalance());
-                        return response;
-
-                    }))
-                    .after((res, c) -> {
-                        c.getVars().put("initBalance", res.getData().getBalance());
+                        dsBalance.setUsername(context.getPullUsername());
+                        dsBalance.setCurrency(context.getWrapCurrency());
+                        return push(context, ActionEnum.BALANCE, dsBalance);
                     })
-                    .verify("status == 'SC_INVALID_SIGNATURE'")
-                    // 3️⃣ 下注5
+                    .verify(ValidationCaseSupport.statusRule(PlatformCodeEnum.INVALID_SIGNATURE))
+            
+                    // 1.02 下注 -> /wallet/bet
                     .step("1.02.01", context ->{
 
                         //存储下注信息
@@ -67,123 +64,99 @@ public class V1Case implements ValidationCase {
                         bet.setBetId(context.getOrderId());
                         //下注金额大于余额
                         bet.setBetAmount(BigDecimal.valueOf(5));
+                        bet.setCurrency(context.getWrapCurrency());
                         bet.setGameCode(context.getGameCode());
                         bet.setRoundId(context.getRoundId());
-
-                        DownstreamResult response = dsManager.push(context, context.getTenant(), ActionEnum.BET, bet,IdUtil.nanoId());
-                        context.setBalance(response.getData().getBalance());
-                        return response;
-                    } )
-                    .after((res, c) -> {
-                        BigDecimal expected = ((BigDecimal) c.getVars().get("initBalance"))
-                                .subtract(BigDecimal.valueOf(5));
-                        c.getVars().put("betBalance", expected);
+                        return push(context, ActionEnum.BET, bet);
                     })
-                    .verify("status == 'SC_INVALID_SIGNATURE'")
+                    .verify(ValidationCaseSupport.statusRule(PlatformCodeEnum.INVALID_SIGNATURE))
 
-                    // 派奖 10
-                    .step("1.03.01", (context -> {
+                    // 1.03 投注结果 -> /wallet/bet_result
+                    .step("1.03.01", context -> {
                         DSBetResultRequest dsRequest = new DSBetResultRequest();
                         dsRequest.setUsername(context.getPullUsername());
                         dsRequest.setTransactionId(IdUtil.fastUUID());
-                        dsRequest.setBetId(betRollBackId);
+                        dsRequest.setExternalTransactionId(context.getOrderId());
+                        dsRequest.setBetId(context.getOrderId());
+                        dsRequest.setRoundId(context.getRoundId());
                         dsRequest.setBetAmount(BigDecimal.valueOf(0));
                         dsRequest.setWinAmount(BigDecimal.valueOf(10));
                         dsRequest.setJackpotAmount(BigDecimal.ZERO);
-                        dsRequest.setActionEnum(ActionEnum.BET_UPDATE);
-
-                        DownstreamResult response =
-                                dsManager.push(context, context.getTenant(), ActionEnum.BET_UPDATE, dsRequest,IdUtil.nanoId());
-
-                        context.setBalance(response.getData().getBalance());
-                        return response;
-                    }))
-                    .after((res, c) -> {
-                        BigDecimal expected = ((BigDecimal) c.getVars().get("betBalance"))
-                                .add(BigDecimal.valueOf(10));
-                        c.getVars().put("expectedBalance", expected);
+                        dsRequest.setGameCode(context.getGameCode());
+                        dsRequest.setActionEnum(ActionEnum.SETTLED);
+                        return push(context, ActionEnum.SETTLED, dsRequest);
                     })
-                    .verify("status == 'SC_INVALID_SIGNATURE'")
+                    .verify(ValidationCaseSupport.statusRule(PlatformCodeEnum.INVALID_SIGNATURE))
 
-                    .step("1.04.01", (context -> {
-                        DSBetResultRequest dsRequest = new DSBetResultRequest();
-                        dsRequest.setUsername(context.getPullUsername());
-                        dsRequest.setTransactionId(IdUtil.fastUUID());
-                        dsRequest.setBetId(betRollBackId);
-                        dsRequest.setBetAmount(BigDecimal.valueOf(0));
-                        dsRequest.setWinAmount(BigDecimal.valueOf(10));
-                        dsRequest.setJackpotAmount(BigDecimal.ZERO);
-                        dsRequest.setActionEnum(ActionEnum.BET_UPDATE);
-                        dsRequest.setResultType("END");
-
-                        DownstreamResult response =
-                                dsManager.push(context, context.getTenant(), ActionEnum.BET_UPDATE, dsRequest,IdUtil.nanoId());
-
-                        context.setBalance(response.getData().getBalance());
-                        return response;
-                    }))
-                    .after((res, c) -> {
-                        BigDecimal expected = ((BigDecimal) c.getVars().get("expectedBalance"));
-                        c.getVars().put("expectedBalance2", expected);
+                    // 1.04 回滚 -> /wallet/rollback
+                    .step("1.04.01", context -> {
+                        DSRollback dsRollback = new DSRollback();
+                        dsRollback.setUsername(context.getPullUsername());
+                        dsRollback.setTransactionId(IdUtil.fastUUID());
+                        dsRollback.setExternalTransactionId(context.getOrderId());
+                        dsRollback.setBetId(context.getOrderId());
+                        dsRollback.setGameCode(context.getGameCode());
+                        dsRollback.setRoundId(context.getRoundId());
+                        return push(context, ActionEnum.REFUND, dsRollback);
                     })
-                    .verify("status == 'SC_INVALID_SIGNATURE'")
+                    .verify(ValidationCaseSupport.statusRule(PlatformCodeEnum.INVALID_SIGNATURE))
 
 
-                    // 扣款10000
+                    // 1.05 扣款10000 -> /wallet/adjustment
                     .step("1.05.01", (context)->{
                         DSAdjustment dsBalance = new DSAdjustment();
-                        dsBalance.setTraceId(IdUtil.fastUUID());
-                        dsBalance.setTimestamp(System.currentTimeMillis());
                         dsBalance.setUsername(context.getPullUsername());
-                        dsBalance.setTransactionId(context.getTransferId());
+                        dsBalance.setTransactionId(IdUtil.fastUUID());
                         dsBalance.setExternalTransactionId(context.getOrderId());
+                        dsBalance.setGameCode(context.getGameCode());
+                        dsBalance.setRoundId(context.getRoundId());
                         dsBalance.setAmount(BigDecimal.valueOf(-10000));
-
-                        DownstreamResult response = dsManager.push(context, context.getTenant(), ActionEnum.ADJUSTMENT, dsBalance,IdUtil.nanoId());
-                        context.setBalance(response.getData().getBalance());
-                        return response;
+                        return push(context, ActionEnum.ADJUSTMENT, dsBalance);
                     })
-                    .verify("status == 'SC_INVALID_SIGNATURE'")
-
+                    .verify(ValidationCaseSupport.statusRule(PlatformCodeEnum.INVALID_SIGNATURE))
+                    // 1.06 投注借记 -> /wallet/bet_debit
                     .step("1.06.01", (context)->{
                         DSDebit dsBalance = new DSDebit();
-                        dsBalance.setTraceId(IdUtil.fastUUID());
-                        dsBalance.setTimestamp(System.currentTimeMillis());
                         dsBalance.setUsername(context.getPullUsername());
-                        dsBalance.setTransactionId(context.getTransferId());
+                        dsBalance.setTransactionId(IdUtil.fastUUID());
                         dsBalance.setExternalTransactionId(context.getOrderId());
+                        dsBalance.setGameCode(context.getGameCode());
+                        dsBalance.setRoundId(context.getRoundId());
+                        dsBalance.setBetId(context.getOrderId());
                         dsBalance.setAmount(BigDecimal.valueOf(1000));
-
-                        DownstreamResult response = dsManager.push(context, context.getTenant(), ActionEnum.DEBIT, dsBalance,IdUtil.nanoId());
-                        context.setBalance(response.getData().getBalance());
-                        return response;
+                        return push(context, ActionEnum.DEBIT, dsBalance);
                     })
-                    .verify("status == 'SC_INVALID_SIGNATURE'")
+                    .verify(ValidationCaseSupport.statusRule(PlatformCodeEnum.INVALID_SIGNATURE))
 
+                    // 1.07 投注信用 -> /wallet/bet_credit
                     .step("1.07.01", (context)->{
                         DSCredit dsBalance = new DSCredit();
-                        dsBalance.setTraceId(IdUtil.fastUUID());
-                        dsBalance.setTimestamp(System.currentTimeMillis());
                         dsBalance.setUsername(context.getPullUsername());
-                        dsBalance.setTransactionId(context.getTransferId());
+                        dsBalance.setTransactionId(IdUtil.fastUUID());
                         dsBalance.setExternalTransactionId(context.getOrderId());
+                        dsBalance.setGameCode(context.getGameCode());
+                        dsBalance.setRoundId(context.getRoundId());
+                        dsBalance.setBetId(context.getOrderId());
                         dsBalance.setBetAmount(BigDecimal.valueOf(1000));
-
-                        DownstreamResult response = dsManager.push(context, context.getTenant(), ActionEnum.CREDIT, dsBalance,IdUtil.nanoId());
-                        context.setBalance(response.getData().getBalance());
-                        return response;
+                        return push(context, ActionEnum.CREDIT, dsBalance);
                     })
-                    .verify("status == 'SC_INVALID_SIGNATURE'")
+                    .verify(ValidationCaseSupport.statusRule(PlatformCodeEnum.INVALID_SIGNATURE))
 
                     .execute();
 
-            return ValidationResult.success(code(), "SUCCESS");
+            return ValidationResult.fromSteps(code(), details);
 
         } catch (Exception e) {
-            return ValidationResult.failure(code(), "FAIL", e.getMessage());
+            return ValidationResult.failure(code(), ValidationResult.TYPE_ERROR, e.getMessage());
         }
+    }
 
-
+    /** 故意无效签 push + 余额回写 */
+    private DownstreamResult push(SportContext context, ActionEnum action, Object body) {
+        DownstreamResult response = dsManager.push(
+                context, context.getTenant(), action, body, IdUtil.nanoId());
+        ValidationCaseSupport.applyBalanceIfPresent(response, context);
+        return response;
     }
 
 }

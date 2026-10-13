@@ -2,6 +2,7 @@ package cn.iocoder.yudao.framework.xss.core.clean;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Entities;
 import org.jsoup.safety.Safelist;
 
 /**
@@ -57,7 +58,27 @@ public class JsoupXssCleaner implements XssCleaner {
 
     @Override
     public String clean(String html) {
-        return Jsoup.clean(html, baseUri, safelist, new Document.OutputSettings().prettyPrint(false));
+        if (html == null || html.isBlank()) {
+            return html;
+        }
+
+        // 配置输出参数：
+        // 1. prettyPrint(false) 保证清理后不改变原始文本的换行格式
+        // 2. escapeMode(Document.OutputSettings.EscapeMode.xhtml) 将特殊字符（如 ', ", <, >）强制进行实体转义
+        Document.OutputSettings outputSettings = new Document.OutputSettings()
+                .prettyPrint(false)
+                .escapeMode(Entities.EscapeMode.xhtml);
+
+        // 使用 Jsoup 进行 HTML / XSS 清理
+        String cleaned = Jsoup.clean(html, baseUri, safelist, outputSettings);
+
+        // 如果文本中包含危险的 style 内联脚本残余，进行二次防御性抹除
+        if (cleaned.contains("javascript:") || cleaned.contains("expression")) {
+            cleaned = cleaned.replaceAll("(?i)style\\s*=\\s*\"[^\"]*(javascript|expression)[^\"]*\"", "");
+        }
+
+        return cleaned;
+
     }
 
 }

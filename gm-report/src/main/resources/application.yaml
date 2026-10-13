@@ -1,6 +1,8 @@
 spring:
   application:
     name: gm-report
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
 
   main:
@@ -123,6 +125,12 @@ spring:
   # Kafka 配置项，对应 KafkaProperties 配置类
   kafka:
     enable: true
+    streams:
+      # 🎯 加上版本号或新业务后缀，彻底开辟一个新的干净消费组
+      application-id: tenant-exchange-streams-app-v2
+    admin:
+      # 🎯 确保这个参数为 true（默认就是 true），允许 Spring 在启动时为你建 Topic
+      auto-create: true
     # Kafka Producer 配置项
     producer:
       acks: all # 0-不应答。1-leader 应答。all-所有 leader 和 follower 应答。
@@ -165,7 +173,7 @@ yudao:
     admin-ui:
       url: http://dashboard.yudao.iocoder.cn # Admin 管理后台 UI 的地址
   xss:
-    enable: false
+    enable: true
     exclude-urls: # 如下两个 url，仅仅是为了演示，去掉配置也没关系
       - ${spring.boot.admin.context-path}/** # 不处理 Spring Boot Admin 的请求
       - ${management.endpoints.web.base-path}/** # 不处理 Actuator 的请求
@@ -174,6 +182,7 @@ yudao:
       - /admin-api/mp/open/** # 微信公众号开放平台，微信回调接口，不需要登录
       # 三方开放接口，允许匿名访问
       - /merchant/**
+      - /static-api/game/support/**
   codegen:
     base-package: ${yudao.info.base-package}
     db-schemas: ${spring.datasource.dynamic.datasource.master.name}
@@ -197,7 +206,7 @@ yudao:
   websocket:
     enable: false # websocket的开关
   tenant: # 多租户相关配置项
-    enable: false
+    enable: true
     ignore-urls:
       - /jmreport/* # 积木报表，无法携带租户编号
       - /gateway/** # 三方开放接口，允许匿名访问

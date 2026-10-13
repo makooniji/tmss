@@ -22,7 +22,7 @@ import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.assertPojoEq
 import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.assertServiceException;
 import static cn.iocoder.yudao.framework.test.core.util.RandomUtils.randomPojo;
 import static cn.iocoder.yudao.framework.test.core.util.RandomUtils.randomString;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;

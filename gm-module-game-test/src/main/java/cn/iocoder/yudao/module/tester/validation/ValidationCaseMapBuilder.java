@@ -57,10 +57,10 @@ public class ValidationCaseMapBuilder {
 
         invalidUsername.put("2.5 Invalid Username Wallet / Adjustment",
                 List.of(new ValidationMeta("2.05.01", "wallet/adjustment", "成功")));
-        invalidUsername.put("2.6 INVALID_SIGNATURE_WALLET/BET_DEBIT",
+        invalidUsername.put("2.6 Invalid Username Wallet / Bet Debit",
                 List.of(new ValidationMeta("2.06.01", "wallet/bet_debit", "成功")));
 
-        invalidUsername.put("2.7 INVALID_SIGNATURE_WALLET/BET_CREDIT",
+        invalidUsername.put("2.7 Invalid Username Wallet / Bet Credit",
                 List.of(new ValidationMeta("2.07.01", "wallet/bet_credit", "成功")));
 
         root.put("2 Validate Invalid Username", invalidUsername);
@@ -100,7 +100,6 @@ public class ValidationCaseMapBuilder {
                         new ValidationMeta("3.05.02", "wallet/bet", "成功"),
                         new ValidationMeta("3.05.03", "wallet/bet_result", "成功"),
                         new ValidationMeta("3.05.04", "wallet/bet_result", "成功"),
-
                         new ValidationMeta("3.05.05", "wallet/adjustment", "成功")
                 ));
 
@@ -176,18 +175,6 @@ public class ValidationCaseMapBuilder {
                         new ValidationMeta("5.06.02", "wallet/bet_result", "成功"),
                         new ValidationMeta("5.06.03", "wallet/bet_result", "成功"),
                         new ValidationMeta("5.06.04", "wallet/bet_result", "成功")
-                ));
-        insufficientFunds5.put("5.7 FISH_CREDIT_AMOUNT_WALLET/BET_CREDIT_INTEGER_AMOUNT",
-                List.of(
-                        new ValidationMeta("5.07.01", "wallet/balance", "成功"),
-                        new ValidationMeta("5.07.02", "wallet/bet_debit", "成功"),
-                        new ValidationMeta("5.07.03", "wallet/bet_credit", "成功")
-                ));
-        insufficientFunds5.put("5.8 FISH_CREDIT_AMOUNT_WALLET/BET_CREDIT_INTEGER_AMOUNT",
-                List.of(
-                        new ValidationMeta("5.08.01", "wallet/balance", "成功"),
-                        new ValidationMeta("5.08.02", "wallet/bet_debit", "成功"),
-                        new ValidationMeta("5.08.03", "wallet/bet_credit", "成功")
                 ));
         root.put("5 Validate Credit Win Amount", insufficientFunds5);
 

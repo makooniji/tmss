@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.framework.tenant.core.context;
 
-import cn.iocoder.yudao.framework.common.enums.DocumentEnum;
 import com.alibaba.ttl.TransmittableThreadLocal;
 
 import java.util.List;
@@ -42,7 +41,7 @@ public class TenantContextHolder {
     public static Long getRequiredTenantId() {
         Long tenantId = getTenantId();
         if (tenantId == null) {
-            throw new NullPointerException("TenantContextHolder 不存在租户编号！可参考文档：");
+            return 1L;
         }
         return tenantId;
     }

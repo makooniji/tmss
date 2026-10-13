@@ -8,9 +8,12 @@ import lombok.Getter;
 public enum MessageTypeEnum {
 
     REGISTER,
-    BET,
     DEPOSIT,
     WITHDRAW,
+    BET,
     PAYOUT,
+    CANCEL,
+    WIN,
+    UNKNOW;
 
 }

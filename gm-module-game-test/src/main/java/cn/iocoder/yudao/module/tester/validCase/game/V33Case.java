@@ -1,13 +1,14 @@
 package cn.iocoder.yudao.module.tester.validCase.game;
 
 import cn.hutool.core.util.IdUtil;
+import cn.iocoder.yudao.framework.common.model.game.push.DSBalance;
+import cn.iocoder.yudao.framework.common.model.game.push.DownstreamResult;
 import cn.iocoder.yudao.framework.websocket.core.sender.WebSocketMessageSender;
 import cn.iocoder.yudao.module.game.manager.DSManager;
-import cn.iocoder.yudao.module.system.enums.ActionEnum;
-import cn.iocoder.yudao.module.system.model.api.SportContext;
-import cn.iocoder.yudao.module.system.model.api.push.DSBalance;
-import cn.iocoder.yudao.module.system.model.api.push.DSBetResultRequest;
-import cn.iocoder.yudao.module.system.model.api.push.DownstreamResult;
+import cn.iocoder.yudao.framework.common.enums.ActionEnum;
+import cn.iocoder.yudao.module.system.enums.ResultTypeEnum;
+import cn.iocoder.yudao.module.system.model.game.DSBetResultRequest;
+import cn.iocoder.yudao.module.system.model.game.SportContext;
 import cn.iocoder.yudao.module.tester.flow.FlowBuilder;
 import cn.iocoder.yudao.module.tester.validation.ValidationCase;
 import cn.iocoder.yudao.module.tester.validation.ValidationResult;
@@ -70,7 +71,7 @@ public class V33Case implements ValidationCase {
                         dsRequest.setWinAmount(BigDecimal.valueOf(100));
                         dsRequest.setJackpotAmount(BigDecimal.ZERO);
                         dsRequest.setActionEnum(ActionEnum.BET_UPDATE);
-                        dsRequest.setResultType("BET_LOSE");
+                        dsRequest.setResultType(ResultTypeEnum.BET_LOSE);
 
                         DownstreamResult response =
                                 dsManager.push(context, context.getTenant(), ActionEnum.BET_UPDATE.getPath(), dsRequest);

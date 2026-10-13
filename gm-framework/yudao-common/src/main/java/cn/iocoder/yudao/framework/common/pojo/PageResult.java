@@ -11,6 +11,10 @@ import java.util.List;
 @Data
 public final class PageResult<T> implements Serializable {
     private Integer currentPage;
+    /**
+     * 总计
+     */
+    private Object totalCount;
 
     @Schema(description = "总量", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long total;
@@ -24,6 +28,11 @@ public final class PageResult<T> implements Serializable {
     public PageResult(List<T> list, Long total) {
         this.list = list;
         this.total = total;
+    }
+    public PageResult(List<T> list, Long total,Object totalCount) {
+        this.list = list;
+        this.total = total;
+        this.totalCount = totalCount;
     }
 
     public PageResult(List<T> list, Long total,Integer pageNo) {

@@ -18,7 +18,7 @@ import java.util.*;
 import java.time.LocalDateTime;
 
 import static cn.hutool.core.util.RandomUtil.*;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.*;
 import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.*;
 import static cn.iocoder.yudao.framework.test.core.util.RandomUtils.*;
 import static cn.iocoder.yudao.framework.common.util.date.LocalDateTimeUtils.*;

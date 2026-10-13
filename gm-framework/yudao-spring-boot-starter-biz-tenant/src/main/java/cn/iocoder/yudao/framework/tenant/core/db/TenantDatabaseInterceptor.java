@@ -1,7 +1,9 @@
 package cn.iocoder.yudao.framework.tenant.core.db;
 
-import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.iocoder.yudao.framework.common.biz.system.tenant.TenantCommonApi;
+import cn.iocoder.yudao.framework.common.util.spring.SpringUtils;
+import cn.iocoder.yudao.framework.security.core.LoginUser;
 import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
 import cn.iocoder.yudao.framework.tenant.config.TenantProperties;
 import cn.iocoder.yudao.framework.tenant.core.aop.TenantIgnore;
@@ -18,6 +20,7 @@ import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +32,7 @@ import java.util.Objects;
  *
  * @author osca
  */
+@Slf4j
 public class TenantDatabaseInterceptor implements TenantLineHandler {
 
     private final TenantCommonApi tenantCommonApi;
@@ -58,7 +62,8 @@ public class TenantDatabaseInterceptor implements TenantLineHandler {
      * 构建租户 WHERE 条件（单租户 = ，多租户 IN）
      */
     public Expression buildTableExpression(Table table) {
-        if (ignoreTable(table.getName())) {
+        String tableName = table.getName();
+        if (ignoreTable(tableName)) {
             return null;
         }
         Column column = getAliasColumn(table);
@@ -75,26 +80,40 @@ public class TenantDatabaseInterceptor implements TenantLineHandler {
             expressionList.addExpressions(new LongValue(id));
         }
         // 须用 ParenthesedExpressionList，否则渲染为 IN 1, 2, 3（无括号）导致 JSQLParser 解析失败
-        return new InExpression(column, new ParenthesedExpressionList(expressionList));
+        return new InExpression(column, new ParenthesedExpressionList<>(expressionList));
     }
 
     /**
-     * 获得当前请求的租户查询范围，同一请求内只查询一次子代理列表
+     * 获得当前请求的租户查询范围
      */
     private List<Long> getScopedTenantIdsForQuery() {
+        // 1. 优先读取业务显式指定的范围（由 @TenantSubScope 切面或业务手动设置）
         List<Long> cached = TenantContextHolder.getTenantIds();
         if (cached != null) {
             return cached;
         }
+
         Long tenantId = TenantContextHolder.getTenantId();
         if (tenantId == null) {
-            return null;
+            return null; // 无租户上下文，不加条件
         }
-        List<Long> scopedTenantIds = tenantCommonApi.getScopedTenantIds(tenantId);
-        if (scopedTenantIds != null && scopedTenantIds.size() > 1) {
-            TenantContextHolder.setTenantIds(scopedTenantIds);
+
+        // 2. 系统租户判断（建议提供专门的轻量方法，如判断是否为超级租户/ID为1，或使用缓存判断）
+        if (isSystemTenant(tenantId)) {
+            return null; // 系统租户不限制租户 ID
         }
-        return scopedTenantIds;
+
+        // 3. 默认仅查询当前租户
+        return List.of(tenantId);
+    }
+
+    /**
+     * 判断是否为系统/超级租户（可根据实际业务逻辑简化）
+     */
+    private boolean isSystemTenant(Long tenantId) {
+        // 示例：如果是默认系统租户 ID（如 1L 或 0L），直接放行
+        return Objects.equals(tenantId, 1L);
+        // 如果必须调用 API，请确保 API 内部查库时加了 @TenantIgnore 或跳过了租户拦截
     }
 
     private static Column getAliasColumn(Table table) {
@@ -110,7 +129,18 @@ public class TenantDatabaseInterceptor implements TenantLineHandler {
         if (TenantContextHolder.isIgnore()) {
             return true;
         }
-        // 情况二，忽略多租户的表
+        LoginUser loginUser = SecurityFrameworkUtils.getLoginUser();
+        if (ObjectUtil.isNotEmpty( loginUser)) {
+            // 情况二，超级管理员跳过租户（依赖当前登录用户，不能写入 ignoreTables 缓存）
+            if (Objects.equals(loginUser.getId(), 1L)) {
+                return true;
+            }
+            if (loginUser.getRoleIds().contains(1L)) {
+                return true;
+            }
+        }
+
+        // 情况三，按表静态配置判断是否忽略（可缓存）
         tableName = SqlParserUtils.removeWrapperSymbol(tableName);
         Boolean ignore = ignoreTables.get(tableName.toLowerCase());
         if (ignore == null) {
@@ -128,21 +158,20 @@ public class TenantDatabaseInterceptor implements TenantLineHandler {
     }
 
     private boolean computeIgnoreTable(String tableName) {
-        if (Objects.equals(SecurityFrameworkUtils.getLoginUserId(), 1L)) {
-            return true;
-        }
         // 找不到的表，说明不是 yudao 项目里的，不进行拦截（忽略租户）
         TableInfo tableInfo = TableInfoHelper.getTableInfo(tableName);
         if (tableInfo == null) {
             return true;
         }
         // 如果继承了 TenantBaseDO 基类，显然不忽略租户
-        if (TenantBaseDO.class.isAssignableFrom(tableInfo.getEntityType())) {
+        if (cn.iocoder.yudao.framework.mybatis.core.dataobject.TenantBaseDO.class.isAssignableFrom(tableInfo.getEntityType())) {
             return false;
         }
         // 如果添加了 @TenantIgnore 注解，则忽略租户
         TenantIgnore tenantIgnore = tableInfo.getEntityType().getAnnotation(TenantIgnore.class);
         return tenantIgnore != null;
     }
+
+
 
 }

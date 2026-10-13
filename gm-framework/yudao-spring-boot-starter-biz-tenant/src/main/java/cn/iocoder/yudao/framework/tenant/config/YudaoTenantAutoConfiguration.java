@@ -7,6 +7,7 @@ import cn.iocoder.yudao.framework.redis.config.YudaoCacheProperties;
 import cn.iocoder.yudao.framework.security.core.service.SecurityFrameworkService;
 import cn.iocoder.yudao.framework.tenant.core.aop.TenantIgnore;
 import cn.iocoder.yudao.framework.tenant.core.aop.TenantIgnoreAspect;
+import cn.iocoder.yudao.framework.tenant.core.aop.TenantSubScopeAspect;
 import cn.iocoder.yudao.framework.tenant.core.db.CustomTenantLineInnerInterceptor;
 import cn.iocoder.yudao.framework.tenant.core.db.TenantDatabaseInterceptor;
 import cn.iocoder.yudao.framework.tenant.core.job.TenantJobAspect;
@@ -69,6 +70,10 @@ public class YudaoTenantAutoConfiguration {
         return new TenantIgnoreAspect();
     }
 
+    @Bean
+    public TenantSubScopeAspect tenantSubScopeAspect(TenantCommonApi tenantCommonApi) {
+        return new TenantSubScopeAspect(tenantCommonApi);
+    }
     // ========== DB ==========
 
     @Bean
@@ -93,12 +98,14 @@ public class YudaoTenantAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "yudao.tenant",value = "visit",havingValue = "true")
     public TenantVisitContextInterceptor tenantVisitContextInterceptor(TenantProperties tenantProperties,
                                                                        SecurityFrameworkService securityFrameworkService) {
         return new TenantVisitContextInterceptor(tenantProperties, securityFrameworkService);
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "yudao.tenant",value = "visit",havingValue = "true")
     public WebMvcConfigurer tenantWebMvcConfigurer(TenantProperties tenantProperties,
                                                    TenantVisitContextInterceptor tenantVisitContextInterceptor) {
         return new WebMvcConfigurer() {
@@ -114,6 +121,7 @@ public class YudaoTenantAutoConfiguration {
     // ========== Security ==========
 
     @Bean
+    @ConditionalOnProperty(prefix = "yudao.tenant",value = "security",havingValue = "true")
     public FilterRegistrationBean<TenantSecurityWebFilter> tenantSecurityWebFilter(TenantProperties tenantProperties,
                                                                                    WebProperties webProperties,
                                                                                    GlobalExceptionHandler globalExceptionHandler,

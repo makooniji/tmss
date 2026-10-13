@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.framework.jackson.config;
 
 import cn.iocoder.yudao.framework.common.util.json.databind.NumberSerializer;
+import cn.iocoder.yudao.framework.common.util.json.databind.PackageSpecificBigDecimalModule;
 import cn.iocoder.yudao.framework.common.util.json.databind.TimestampLocalDateTimeDeserializer;
 import cn.iocoder.yudao.framework.common.util.json.databind.TimestampLocalDateTimeSerializer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -41,7 +42,7 @@ public class YudaoJacksonAutoConfiguration {
     /**
      * 【修复核心点 1】：删除了原本产生冲突的 @Bean @Primary ObjectMapper 方法！
      * 不再去硬造一个对象，而是改为拦截加工。
-     *
+     * <p>
      * 通过实现 SmartInitializingSingleton，在 Spring 容器把所有单例 Bean（包括别人造出来的那个 primary）
      * 塞进容器后的最终阶段，捞出来注入我们必须依赖的那些底层 Feature 策略。
      */
@@ -95,7 +96,8 @@ public class YudaoJacksonAutoConfiguration {
                 // LocalDateTime < - > EpochMillis
                 .serializerByType(LocalDateTime.class, TimestampLocalDateTimeSerializer.INSTANCE)
                 .deserializerByType(LocalDateTime.class, TimestampLocalDateTimeDeserializer.INSTANCE)
-
+                // 【新增】：指定将 "com.yourcompany.project.vo" 包下所有类的 BigDecimal 转换为2位小数
+                .modules(new PackageSpecificBigDecimalModule("cn.iocoder.yudao.module.system.**"))
                 // 保留两位小数点
                 //.serializerByType(BigDecimal.class, new BigDecimalTwoDegreeSerializer())
                 ;

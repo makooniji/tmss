@@ -47,21 +47,21 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:mysql://172.31.100.61:32601/game_manager?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
+          url: jdbc:mysql://172.31.110.113:30852/game_manager?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
           username: game_manager
           password: manager&fhg..
         slave: # 模拟从库，可根据自己需要修改 # 模拟从库，可根据自己需要修改
           lazy: true # 开启懒加载，保证启动速度
-          url: jdbc:mysql://172.31.100.61:32601/game_manager?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
+          url: jdbc:mysql://172.31.110.113:30852/game_manager?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
           username: game_manager
           password: manager&fhg..
 
   # Redis 配置。Redisson 默认的配置足够使用，一般不需要进行调优
   data:
     redis:
-      host: 172.31.100.61 # 地址
+      host: 172.31.110.113 # 地址
       port: 30024 # 端口
-      database: 3 # 数据库索引
+      database: 9 # 数据库索引
       password: foobared # 密码，建议生产环境开启
 
 --- #################### 定时任务相关配置 ####################
@@ -102,7 +102,15 @@ spring:
 spring:
   # Kafka 配置项，对应 KafkaProperties 配置类
   kafka:
-    bootstrap-servers: 172.31.100.61:30094 # 指定 Kafka Broker 地址，可以设置多个，以逗号分隔
+    bootstrap-servers: 172.31.110.113:30094 # 指定 Kafka Broker 地址，可以设置多个，以逗号分隔
+    # Kafka Streams 专有配置
+    streams:
+      application-id: gm-streams-dev # 拓扑应用唯一ID
+      bootstrap-servers: 172.31.110.113:30094
+      properties:
+        # 默认的序列化/反序列化器（全部设为 String，像我们之前设计的工厂一样，绝对安全）
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
 
 --- #################### 服务保障相关配置 ####################
 
@@ -137,28 +145,9 @@ spring:
 
 # 日志文件配置
 logging:
-  logstash: 172.31.100.61:30365
+  logstash: 172.31.110.113:30365
   file:
     name: ./logs/${spring.application.name}.log # 日志文件名，全路径
-
---- #################### 微信公众号相关配置 ####################
-wx: # 参见 https://github.com/Wechat-Group/WxJava/blob/develop/spring-boot-starters/wx-java-mp-spring-boot-starter/README.md 文档
-  mp:
-    # 公众号配置(必填)
-    app-id: wx041349c6f39b268b
-    secret: 5abee519483bc9f8cb37ce280e814bd0
-    # 存储配置，解决 AccessToken 的跨节点的共享
-    config-storage:
-      type: RedisTemplate # 采用 RedisTemplate 操作 Redis，会自动从 Spring 中获取
-      key-prefix: wx # Redis Key 的前缀
-      http-client-type: HttpClient # 采用 HttpClient 请求微信公众号平台
-  miniapp: # 小程序配置（必填），参见 https://github.com/Wechat-Group/WxJava/blob/develop/spring-boot-starters/wx-java-miniapp-spring-boot-starter/README.md 文档
-    appid: wx63c280fe3248a3e7
-    secret: 6f270509224a7ae1296bbf1c8cb97aed
-    config-storage:
-      type: RedisTemplate # 采用 RedisTemplate 操作 Redis，会自动从 Spring 中获取
-      key-prefix: wa # Redis Key 的前缀
-      http-client-type: HttpClient # 采用 HttpClient 请求微信公众号平台
 
 --- #################### 芋道相关配置 ####################
 
@@ -175,11 +164,6 @@ yudao:
   access-log: # 访问日志的配置项
     enable: false
   demo: false # 关闭演示模式
-  wxa-code:
-    env-version: develop # 小程序版本: 正式版为 "release"；体验版为 "trial"；开发版为 "develop"
-  wxa-subscribe-message:
-    miniprogram-state: developer # 跳转小程序类型：开发版为 “developer”；体验版为 “trial”为；正式版为 “formal”
-  tencent-lbs-key: TVDBZ-TDILD-4ON4B-PFDZA-RNLKH-VVF6E # QQ 地图的密钥 https://lbs.qq.com/service/staticV2/staticGuide/staticDoc
 
 
 

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.*;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.*;
 
 /**
  * 示例分类 Service 实现类

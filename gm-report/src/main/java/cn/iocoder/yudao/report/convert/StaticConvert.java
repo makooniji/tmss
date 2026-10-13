@@ -4,14 +4,16 @@ package cn.iocoder.yudao.report.convert;
 import cn.iocoder.yudao.framework.common.util.json.JsonUtils;
 import cn.iocoder.yudao.framework.mq.kafka.StaticDTO;
 import cn.iocoder.yudao.framework.mq.kafka.merchant.MerchantStaticDTO;
+import cn.iocoder.yudao.module.system.model.CategoryDO;
+import cn.iocoder.yudao.module.system.model.GameVendorDO;
+import cn.iocoder.yudao.module.system.model.dto.GameStaticDTO;
+import cn.iocoder.yudao.report.controller.api.dto.CategoryRespDto;
+import cn.iocoder.yudao.report.controller.api.dto.VendorRespDto;
 import cn.iocoder.yudao.report.model.SystemMessageFlowDo;
 import cn.iocoder.yudao.report.model.game.TenantDayStaticDO;
 import cn.iocoder.yudao.report.model.game.TenantUserDayStaticDO;
 import cn.iocoder.yudao.report.model.merchant.MerchantUserDayStaticDO;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -27,17 +29,18 @@ public interface StaticConvert {
     cn.iocoder.yudao.framework.mq.kafka.StaticDTO convert(TenantUserDayStaticDO userDayStaticDO);
 
 
-    TenantDayStaticDO convertTenantDO(StaticDTO staticDTO);
+    TenantDayStaticDO convertTenantDO(GameStaticDTO staticDTO);
 
-    TenantUserDayStaticDO convertUserDO(StaticDTO staticDTO);
+    TenantUserDayStaticDO convertUserDO(GameStaticDTO staticDTO);
 
-    List<TenantDayStaticDO> convertTenantDO(List<StaticDTO> staticDTO);
+    List<TenantDayStaticDO> convertTenantDO(List<GameStaticDTO> staticDTO);
 
-    List<TenantUserDayStaticDO> convertUserDO(List<StaticDTO> staticDTO);
+    List<TenantUserDayStaticDO> convertUserDO(List<GameStaticDTO> staticDTO);
 
     List<MerchantUserDayStaticDO> toMerchantUser(List<MerchantStaticDTO> staticDTO);
 
-    List<SystemMessageFlowDo> toMessageFLow(List<MerchantStaticDTO> staticDTO);
+    List<SystemMessageFlowDo> toMessageFLow(List<GameStaticDTO> staticDTO);
+    SystemMessageFlowDo toMessageFLow(GameStaticDTO staticDTO);
 
     // 声明单体转换
     SystemMessageFlowDo toMessageFLowSingle(MerchantStaticDTO src);
@@ -55,4 +58,16 @@ public interface StaticConvert {
             target.setContent(JsonUtils.toJsonString(src));
         }
     }
+
+
+    @Mapping(source = "vendorName", target = "title")
+    @Mapping(source = "vendorCode", target = "code")
+    VendorRespDto toSupport(GameVendorDO bean);
+
+    List<VendorRespDto> toSupportList(List<GameVendorDO> list);
+
+    CategoryRespDto convert(CategoryDO bean);
+
+    List<CategoryRespDto> convertList(List<CategoryDO> list);
+
 }

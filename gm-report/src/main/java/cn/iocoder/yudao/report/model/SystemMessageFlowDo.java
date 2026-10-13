@@ -45,5 +45,7 @@ public class SystemMessageFlowDo {
 
     private Long tenantId;
 
+    private String currency;
+
 
 }

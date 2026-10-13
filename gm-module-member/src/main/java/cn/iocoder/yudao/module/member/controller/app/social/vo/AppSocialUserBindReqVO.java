@@ -1,12 +1,10 @@
 package cn.iocoder.yudao.module.member.controller.app.social.vo;
 
 import cn.iocoder.yudao.framework.common.validation.InEnum;
-import cn.iocoder.yudao.module.system.enums.social.SocialTypeEnum;
+
+import cn.iocoder.yudao.framework.social.enums.SocialTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

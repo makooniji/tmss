@@ -36,22 +36,12 @@ public class LambdaQueryWrapperX<T> extends LambdaQueryWrapper<T> {
     }
     /**
      * 扩展：如果值存在，则进行 JSON 内部字段匹配
-     * 效果：WHERE lang->'$.zh.gameName' = 'JILI'
-     *
-     * @param column 实体类中的 JSON 字段 (如 GameInfoDO::getLang)
-     * @param field  JSON 内部的 key (如 "gameName")
-     * @param val    匹配的值
      */
-    public LambdaQueryWrapperX<T> eqLangPresent(SFunction<T, ?> column, String field, Object val) {
+    public LambdaQueryWrapperX<T> eqJsonPresent(SFunction<T, ?> column, String field, Object val) {
         if (ObjectUtil.isNotEmpty(val)) {
-            // 1. 获取当前语言上下文
-            String lang = LangContextHolder.get();
-            // 2. 将 Lambda 转换为数据库列名 (如 "lang")
-            String columnName = columnToString(column);
 
-            // 3. 构造 MySQL JSON 查询语法 (根据你的数据库调整语法)
-            // {0}->'$.{1}.{2}' = {3}
-            String sqlExpression = String.format("%s->'$.%s.%s' = {0}", columnName, lang, field);
+            String columnName = columnToString(column);
+            String sqlExpression = String.format("%s->'$.%s' = {0}", columnName,field);
 
             return (LambdaQueryWrapperX<T>) super.apply(sqlExpression, val);
         }

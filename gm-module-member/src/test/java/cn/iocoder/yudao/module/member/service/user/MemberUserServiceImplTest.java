@@ -9,7 +9,7 @@ import cn.iocoder.yudao.module.member.controller.app.user.vo.AppMemberUserUpdate
 import cn.iocoder.yudao.module.member.dal.dataobject.user.MemberUserDO;
 import cn.iocoder.yudao.module.member.dal.mysql.user.MemberUserMapper;
 import cn.iocoder.yudao.module.member.service.auth.MemberAuthServiceImpl;
-import cn.iocoder.yudao.module.system.api.sms.SmsCodeApi;
+import cn.iocoder.yudao.module.system.sms.SmsCodeApi;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

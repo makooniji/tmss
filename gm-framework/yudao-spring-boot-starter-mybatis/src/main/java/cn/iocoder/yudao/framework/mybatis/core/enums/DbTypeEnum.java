@@ -28,7 +28,7 @@ public enum DbTypeEnum {
     /**
      * MySQL
      */
-    MY_SQL(DbType.MYSQL, "MySQL", "FIND_IN_SET('#{value}', #{column}) <> 0"),
+    MY_SQL(DbType.MYSQL, "MySQL", "FIND_IN_SET(#{value}, #{column}) <> 0"),
 
     /**
      * Oracle

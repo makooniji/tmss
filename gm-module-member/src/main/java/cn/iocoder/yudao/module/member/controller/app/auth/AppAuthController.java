@@ -1,15 +1,12 @@
 package cn.iocoder.yudao.module.member.controller.app.auth;
 
 import cn.hutool.core.util.StrUtil;
-import cn.iocoder.yudao.framework.common.enums.UserTypeEnum;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.security.config.SecurityProperties;
 import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
 import cn.iocoder.yudao.module.member.controller.app.auth.vo.*;
-import cn.iocoder.yudao.module.member.convert.auth.AuthConvert;
 import cn.iocoder.yudao.module.member.service.auth.MemberAuthService;
-import cn.iocoder.yudao.module.system.api.social.SocialClientApi;
-import cn.iocoder.yudao.module.system.api.social.dto.SocialWxJsapiSignatureRespDTO;
+import cn.iocoder.yudao.framework.social.service.SocialClientApi;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -45,7 +42,7 @@ public class AppAuthController {
     @PostMapping("/login")
     @Operation(summary = "使用手机 + 密码登录")
     @PermitAll
-    public CommonResult<AppAuthLoginRespVO> login(@RequestBody @Valid AppAuthLoginReqVO reqVO) {
+    public CommonResult<cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO> login(@RequestBody @Valid AppAuthLoginReqVO reqVO) {
         return success(authService.login(reqVO));
     }
 
@@ -65,7 +62,7 @@ public class AppAuthController {
     @Operation(summary = "刷新令牌")
     @Parameter(name = "refreshToken", description = "刷新令牌", required = true)
     @PermitAll
-    public CommonResult<AppAuthLoginRespVO> refreshToken(@RequestParam("refreshToken") String refreshToken) {
+    public CommonResult<cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO> refreshToken(@RequestParam("refreshToken") String refreshToken) {
         return success(authService.refreshToken(refreshToken));
     }
 
@@ -74,7 +71,7 @@ public class AppAuthController {
     @PostMapping("/sms-login")
     @Operation(summary = "使用手机 + 验证码登录")
     @PermitAll
-    public CommonResult<AppAuthLoginRespVO> smsLogin(@RequestBody @Valid AppAuthSmsLoginReqVO reqVO) {
+    public CommonResult<cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO> smsLogin(@RequestBody @Valid AppAuthSmsLoginReqVO reqVO) {
         return success(authService.smsLogin(reqVO));
     }
 
@@ -111,25 +108,8 @@ public class AppAuthController {
     @PostMapping("/social-login")
     @Operation(summary = "社交快捷登录，使用 code 授权码", description = "适合未登录的用户，但是社交账号已绑定用户")
     @PermitAll
-    public CommonResult<AppAuthLoginRespVO> socialLogin(@RequestBody @Valid AppAuthSocialLoginReqVO reqVO) {
+    public CommonResult<cn.iocoder.yudao.module.system.model.vo.oauth2.AppAuthLoginRespVO> socialLogin(@RequestBody @Valid AppAuthSocialLoginReqVO reqVO) {
         return success(authService.socialLogin(reqVO));
-    }
-
-    @PostMapping("/weixin-mini-app-login")
-    @Operation(summary = "微信小程序的一键登录")
-    @PermitAll
-    public CommonResult<AppAuthLoginRespVO> weixinMiniAppLogin(@RequestBody @Valid AppAuthWeixinMiniAppLoginReqVO reqVO) {
-        return success(authService.weixinMiniAppLogin(reqVO));
-    }
-
-    @PostMapping("/create-weixin-jsapi-signature")
-    @Operation(summary = "创建微信 JS SDK 初始化所需的签名",
-            description = "参考 https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html 文档")
-    @PermitAll
-    public CommonResult<SocialWxJsapiSignatureRespDTO> createWeixinMpJsapiSignature(@RequestParam("url") String url) {
-        SocialWxJsapiSignatureRespDTO signature = socialClientApi.createWxMpJsapiSignature(
-                UserTypeEnum.MEMBER.getValue(), url);
-        return success(AuthConvert.INSTANCE.convert(signature));
     }
 
 }

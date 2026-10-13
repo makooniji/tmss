@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 @Schema(description="分页参数")
 @Data
-public class PageParam implements Serializable {
+public class PageParam extends BaseQueryDTO {
 
     private static final Integer PAGE_NO = 1;
     private static final Integer PAGE_SIZE = 10;

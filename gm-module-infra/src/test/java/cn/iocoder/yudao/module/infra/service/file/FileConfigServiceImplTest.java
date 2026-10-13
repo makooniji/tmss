@@ -33,8 +33,8 @@ import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.assertPojoEq
 import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.assertServiceException;
 import static cn.iocoder.yudao.framework.test.core.util.RandomUtils.randomLongId;
 import static cn.iocoder.yudao.framework.test.core.util.RandomUtils.randomPojo;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.FILE_CONFIG_DELETE_FAIL_MASTER;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.FILE_CONFIG_NOT_EXISTS;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.FILE_CONFIG_DELETE_FAIL_MASTER;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.FILE_CONFIG_NOT_EXISTS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;

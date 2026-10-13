@@ -31,8 +31,8 @@ import java.util.Objects;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.cache.CacheUtils.buildAsyncReloadingCache;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.FILE_CONFIG_DELETE_FAIL_MASTER;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.FILE_CONFIG_NOT_EXISTS;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.FILE_CONFIG_DELETE_FAIL_MASTER;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.FILE_CONFIG_NOT_EXISTS;
 
 /**
  * 文件配置 Service 实现类

@@ -27,7 +27,7 @@ public class TenantUserDayStaticDO implements Serializable {
     /**
      * 主键
      */
-    @TableId(type = IdType.ASSIGN_UUID)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
      * 时间维度
@@ -52,7 +52,7 @@ public class TenantUserDayStaticDO implements Serializable {
 
 
     /**
-    *  游戏编码
+     * 游戏编码
      */
     private String gameCode;
     /**
@@ -66,15 +66,15 @@ public class TenantUserDayStaticDO implements Serializable {
     /**
      * 投注次数
      */
-    private Integer betCount=0;
+    private Integer betCount = 0;
     /**
      * 投注金额
      */
-    private BigDecimal betAmount=BigDecimal.ZERO;
+    private BigDecimal betAmount = BigDecimal.ZERO;
     /**
      * 派彩金额
      */
-    private BigDecimal payAmount=BigDecimal.ZERO;
+    private BigDecimal payAmount = BigDecimal.ZERO;
 
     /**
      * 输赢金额
@@ -83,11 +83,13 @@ public class TenantUserDayStaticDO implements Serializable {
     /**
      * 中奖概率
      */
-    private BigDecimal rtp=BigDecimal.ZERO;
+    private BigDecimal rtp = BigDecimal.ZERO;
 
     /**
      * 租户标识
      */
     private Long tenantId;
+
+    private String currency;
 
 }

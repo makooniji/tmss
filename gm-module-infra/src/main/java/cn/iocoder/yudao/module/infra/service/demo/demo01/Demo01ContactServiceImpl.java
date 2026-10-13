@@ -14,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
-import static cn.iocoder.yudao.module.infra.enums.ErrorCodeConstants.DEMO01_CONTACT_NOT_EXISTS;
+import static cn.iocoder.yudao.framework.common.enums.ErrorCodeConstants.DEMO01_CONTACT_NOT_EXISTS;
 
 /**
  * 示例联系人 Service 实现类

@@ -37,6 +37,14 @@ public class SignUtils extends SignUtil {
     }
 
     /**
+     * 生成签名（原始 JSON 字符串）
+     */
+    public static String buildSign(String rawJson, String key) {
+        HMac hmac = new HMac(HmacAlgorithm.HmacSHA256, key.getBytes(StandardCharsets.UTF_8));
+        return hmac.digestHex(rawJson);
+    }
+
+    /**
      * 生成签名
      */
     public static String buildSign(Map<String, Object> dataMap, String key) {

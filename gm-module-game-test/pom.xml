@@ -25,7 +25,7 @@
 
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
-            <artifactId>gm-module-system</artifactId>
+            <artifactId>gm-module-system-biz</artifactId>
             <version>${revision}</version>
         </dependency>
 
@@ -105,14 +105,6 @@
             <artifactId>justauth-spring-boot-starter</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.binarywang</groupId>
-            <artifactId>wx-java-mp-spring-boot-starter</artifactId> <!-- 微信登录（公众号） -->
-        </dependency>
-        <dependency>
-            <groupId>com.github.binarywang</groupId>
-            <artifactId>wx-java-miniapp-spring-boot-starter</artifactId>  <!-- 微信登录（小程序） -->
-        </dependency>
 
         <dependency>
             <groupId>com.anji-plus</groupId>
@@ -123,17 +115,14 @@
             <groupId>org.dromara.hutool</groupId>
             <artifactId>hutool-extra</artifactId> <!-- 邮件 -->
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webflux</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
-            <artifactId>gm-module-game</artifactId>
+            <artifactId>gm-module-game-biz</artifactId>
             <version>2026.01-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

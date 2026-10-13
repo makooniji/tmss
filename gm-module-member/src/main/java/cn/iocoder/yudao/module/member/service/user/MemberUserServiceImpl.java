@@ -2,10 +2,8 @@ package cn.iocoder.yudao.module.member.service.user;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.*;
 import cn.iocoder.yudao.framework.common.enums.CommonStatusEnum;
-import cn.iocoder.yudao.framework.common.enums.UserTypeEnum;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.module.member.controller.admin.user.vo.MemberUserPageReqVO;
@@ -16,10 +14,9 @@ import cn.iocoder.yudao.module.member.convert.user.MemberUserConvert;
 import cn.iocoder.yudao.module.member.dal.dataobject.user.MemberUserDO;
 import cn.iocoder.yudao.module.member.dal.mysql.user.MemberUserMapper;
 import cn.iocoder.yudao.module.member.mq.producer.user.MemberUserProducer;
-import cn.iocoder.yudao.module.system.api.sms.SmsCodeApi;
-import cn.iocoder.yudao.module.system.api.sms.dto.code.SmsCodeUseReqDTO;
-import cn.iocoder.yudao.module.system.api.social.SocialClientApi;
-import cn.iocoder.yudao.module.system.api.social.dto.SocialWxPhoneNumberInfoRespDTO;
+import cn.iocoder.yudao.module.system.sms.SmsCodeApi;
+import cn.iocoder.yudao.module.system.sms.dto.code.SmsCodeUseReqDTO;
+import cn.iocoder.yudao.framework.social.service.SocialClientApi;
 import cn.iocoder.yudao.module.system.enums.sms.SmsSceneEnum;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
@@ -168,18 +165,7 @@ public class MemberUserServiceImpl implements MemberUserService {
         memberUserMapper.updateById(MemberUserDO.builder().id(userId).mobile(reqVO.getMobile()).build());
     }
 
-    @Override
-    public void updateUserMobileByWeixin(Long userId, AppMemberUserUpdateMobileByWeixinReqVO reqVO) {
-        // 1.1 获得对应的手机号信息
-        SocialWxPhoneNumberInfoRespDTO phoneNumberInfo = socialClientApi.getWxMaPhoneNumberInfo(
-                UserTypeEnum.MEMBER.getValue(), reqVO.getCode());
-        Assert.notNull(phoneNumberInfo, "获得手机信息失败，结果为空");
-        // 1.2 校验新手机是否已经被绑定
-        validateMobileUnique(userId, phoneNumberInfo.getPhoneNumber());
 
-        // 2. 更新用户手机
-        memberUserMapper.updateById(MemberUserDO.builder().id(userId).mobile(phoneNumberInfo.getPhoneNumber()).build());
-    }
 
     @Override
     public void updateUserPassword(Long userId, AppMemberUserUpdatePasswordReqVO reqVO) {

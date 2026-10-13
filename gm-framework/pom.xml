@@ -28,6 +28,9 @@
         <module>yudao-spring-boot-starter-biz-tenant</module>
         <module>yudao-spring-boot-starter-biz-data-permission</module>
         <module>yudao-spring-boot-starter-biz-ip</module>
+        <module>yudao-spring-boot-starter-log</module>
+        <module>yudao-spring-boot-starter-permission</module>
+        <module>yudao-spring-boot-starter-social</module>
     </modules>
 
     <artifactId>gm-framework</artifactId>

@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author osca
  */
 @SuppressWarnings("SpringComponentScan") // 忽略 IDEA 无法识别 ${yudao.info.base-package}
-@SpringBootApplication(scanBasePackages = {"${yudao.info.base-package}.server", "${yudao.info.base-package}.module"})
+@SpringBootApplication(scanBasePackages = {"${yudao.info.base-package}.*"})
 public class GMServerApp {
 
     public static void main(String[] args) {

@@ -2,7 +2,7 @@ package cn.iocoder.yudao.module.infra.controller.admin.job.vo.job;
 
 import cn.iocoder.yudao.framework.excel.core.annotations.DictFormat;
 import cn.iocoder.yudao.framework.excel.core.convert.DictConvert;
-import cn.iocoder.yudao.module.infra.enums.DictTypeConstants;
+import cn.iocoder.yudao.framework.common.enums.DictTypeConstants;
 import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
 import cn.idev.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;

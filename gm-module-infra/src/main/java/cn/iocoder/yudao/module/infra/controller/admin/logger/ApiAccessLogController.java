@@ -1,15 +1,16 @@
 package cn.iocoder.yudao.module.infra.controller.admin.logger;
 
-import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
+
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
-import cn.iocoder.yudao.module.infra.controller.admin.logger.vo.apiaccesslog.ApiAccessLogPageReqVO;
-import cn.iocoder.yudao.module.infra.controller.admin.logger.vo.apiaccesslog.ApiAccessLogRespVO;
-import cn.iocoder.yudao.module.infra.dal.dataobject.logger.ApiAccessLogDO;
-import cn.iocoder.yudao.module.infra.service.logger.ApiAccessLogService;
+import cn.iocoder.yudao.framework.log.core.annotation.ApiAccessLog;
+import cn.iocoder.yudao.framework.log.model.ApiAccessLogDO;
+import cn.iocoder.yudao.framework.log.model.vo.apiaccesslog.ApiAccessLogPageReqVO;
+import cn.iocoder.yudao.framework.log.model.vo.apiaccesslog.ApiAccessLogRespVO;
+import cn.iocoder.yudao.framework.log.service.ApiAccessLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,8 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.List;
 
-import static cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum.EXPORT;
+
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static cn.iocoder.yudao.framework.log.core.enums.OperateTypeEnum.EXPORT;
 
 @Tag(name = "管理后台 - API 访问日志")
 @RestController
