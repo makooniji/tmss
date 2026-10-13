@@ -7,7 +7,11 @@
       :rules="formRules"
       label-width="100px"
     >
-      <el-form-item :label="t('system.tenant.venue')" prop="vendorCodes">
+      <el-form-item
+        :label="t('system.tenant.venue')"
+        prop="vendorCodes"
+        required
+      >
         <el-select
           v-model="formData.vendorCodes"
           multiple
@@ -18,20 +22,6 @@
             :key="item.vendorCode"
             :label="item.vendorName"
             :value="item.vendorCode"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item :label="t('system.tenant.game')" prop="gameCodes">
-        <el-select
-          v-model="formData.gameCodes"
-          multiple
-          :placeholder="t('system.tenant.selectGame')"
-        >
-          <el-option
-            v-for="item in gameOptions"
-            :key="item.gameCode"
-            :label="item.gameName"
-            :value="item.gameCode"
           />
         </el-select>
       </el-form-item>
@@ -49,7 +39,6 @@
 <script lang="ts" setup>
   import * as TenantApi from '@/api/system/tenant'
   import { VendorApi } from '@/api/game/vendor'
-  import { InfoApi } from '@/api/game/info'
 
   defineOptions({ name: 'SystemGameconfigurationForm' })
 
@@ -62,21 +51,19 @@
   const formData = ref({
     id: undefined,
     tenantId: undefined,
-    vendorCodes: [],
-    gameCodes: []
+    vendorCodes: [] as string[]
   })
   const formRules = computed(() => ({
     vendorCodes: [
       {
         required: true,
-        message: t('system.tenant.venueRequired'),
-        trigger: 'change'
-      }
-    ],
-    gameCodes: [
-      {
-        required: true,
-        message: t('system.tenant.gameRequired'),
+        validator: (_rule, value, callback) => {
+          if (!Array.isArray(value) || value.length === 0) {
+            callback(new Error(t('system.tenant.venueRequired')))
+            return
+          }
+          callback()
+        },
         trigger: 'change'
       }
     ]
@@ -86,12 +73,7 @@
     vendorCode: string
     vendorName: string
   }
-  interface GameOption {
-    gameCode: string
-    gameName: string
-  }
   const vendorOptions = ref<vendorOptions[]>([])
-  const gameOptions = ref<GameOption[]>([])
 
   const queryParams = reactive({
     pageNo: 1,
@@ -108,18 +90,24 @@
     if (id) {
       formLoading.value = true
       try {
-        formData.value = await TenantApi.getGameConfig(id)
+        const data = await TenantApi.getGameConfig(id)
+        formData.value = {
+          ...data,
+          vendorCodes: data.vendorCodes ?? []
+        }
       } finally {
         formLoading.value = false
       }
     }
     const vendorList = await VendorApi.getVendorPage(queryParams)
     vendorOptions.value = vendorList?.list
-
-    const gameList = await InfoApi.getInfoPage(queryParams)
-    gameOptions.value = gameList?.list
   }
   defineExpose({ open }) // 提供 open 方法，用于打开弹窗
+
+  const buildSubmitData = () => ({
+    tenantId: formData.value.id,
+    vendorCodes: formData.value.vendorCodes ?? []
+  })
 
   /** 提交表单 */
   const emit = defineEmits(['success']) // 定义 success 事件，用于操作成功后的回调
@@ -131,9 +119,7 @@
     // 提交请求
     formLoading.value = true
     try {
-      const data = formData.value
-      data.tenantId = data.id // 将 tenantId 设置为表单的 id
-      await TenantApi.updateGameConfig(data)
+      await TenantApi.updateGameConfig(buildSubmitData())
       message.success(t('common.updateSuccess'))
       dialogVisible.value = false
       // 发送操作成功的事件
@@ -148,8 +134,7 @@
     formData.value = {
       id: undefined,
       tenantId: undefined,
-      vendorCodes: [],
-      gameCodes: []
+      vendorCodes: []
     }
     formRef.value?.resetFields()
   }

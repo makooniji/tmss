@@ -87,7 +87,7 @@
           plain
           @click="handleExport"
           :loading="exportLoading"
-          v-hasPermi="['game:tenant-day-static:export']"
+          v-hasPermi="['system:tenant:export']"
         >
           <Icon icon="ep:download" class="mr-5px" /> {{ t('action.export') }}
         </el-button>
@@ -156,13 +156,13 @@
         align="center"
       >
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.TENANT_STATUS" :value="scope.row.status" />
+          <dict-tag :type="DICT_TYPE.COMMON_STATUS" :value="scope.row.status" />
         </template>
       </el-table-column>
       <el-table-column
         :label="t('game.common.playerCount')"
         align="center"
-        prop="tenantDO.accountCount"
+        :prop="activeName == 'first' ? 'accountCount' : 'userCount'"
       />
       <el-table-column
         :label="t('table.action')"
@@ -181,13 +181,6 @@
         </template>
       </el-table-column>
     </el-table>
-    <!-- 分页 -->
-    <Pagination
-      :total="total"
-      v-model:page="queryParams.pageNo"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    />
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
@@ -238,8 +231,11 @@
       if (daysArr.value[0] && daysArr.value[1]) {
         queryParams.days = daysArr.value[0]
         queryParams.endDays = daysArr.value[1]
+        return
       }
     }
+    queryParams.days = undefined
+    queryParams.endDays = undefined
   })
 
   const tabsList = computed(() => [
@@ -390,8 +386,8 @@
     try {
       await message.exportConfirm()
       exportLoading.value = true
-      const data = await TenantDayStaticApi.exportTenantDayStatic(queryParams)
-      download.excel(data, t('game.common.exportTenantDay'))
+      const data = await TenantDayStaticApi.exportTenantBehavior(queryParams)
+      download.excel(data, t('system.tenantdata.exportFile'))
     } catch {
     } finally {
       exportLoading.value = false

@@ -15,12 +15,7 @@
           <LoginFormTitle class="w-full" />
         </el-form-item>
       </el-col>
-      <!-- <el-col :span="24" class="px-10px">
-        <el-form-item v-if="loginData.tenantEnable === 'true'" prop="tenantName">
-          <el-input v-model="loginData.loginForm.tenantName" :placeholder="t('login.tenantNamePlaceholder')"
-            :prefix-icon="iconHouse" link type="primary" />
-        </el-form-item>
-      </el-col> -->
+      <!-- 租户名（已废弃，tenant-id 仅由登录接口返回） -->
       <el-col :span="24" class="px-10px">
         <el-form-item prop="username">
           <el-input
@@ -153,8 +148,6 @@
   defineOptions({ name: 'LoginForm' })
 
   const { t } = useI18n()
-  const message = useMessage()
-  const iconHouse = useIcon({ icon: 'ep:house' })
   const iconAvatar = useIcon({ icon: 'ep:avatar' })
   const iconLock = useIcon({ icon: 'ep:lock' })
   const formLogin = ref()
@@ -170,29 +163,19 @@
   const getShow = computed(() => unref(getLoginState) === LoginStateEnum.LOGIN)
 
   const LoginRules = {
-    tenantName: [required],
     username: [required],
     password: [required]
   }
   const loginData = reactive({
     isShowPassword: false,
     captchaEnable: import.meta.env.VITE_APP_CAPTCHA_ENABLE,
-    tenantEnable: import.meta.env.VITE_APP_TENANT_ENABLE,
     loginForm: {
-      tenantName: import.meta.env.VITE_APP_DEFAULT_LOGIN_TENANT || '',
       username: import.meta.env.VITE_APP_DEFAULT_LOGIN_USERNAME || '',
       password: import.meta.env.VITE_APP_DEFAULT_LOGIN_PASSWORD || '',
       captchaVerification: '',
       rememberMe: true // 默认记录我。如果不需要，可手动修改
     }
   })
-
-  const socialList = [
-    { icon: 'ant-design:wechat-filled', type: 30 },
-    { icon: 'ant-design:dingtalk-circle-filled', type: 20 },
-    { icon: 'ant-design:github-filled', type: 0 },
-    { icon: 'ant-design:alipay-circle-filled', type: 0 }
-  ]
 
   // 获取验证码
   const getCode = async () => {
@@ -203,15 +186,6 @@
       // 情况二，已开启：则展示验证码；只有完成验证码的情况，才进行登录
       // 弹出验证码
       verify.value.show()
-    }
-  }
-  // 获取租户 ID
-  const getTenantId = async () => {
-    if (loginData.tenantEnable === 'true') {
-      const res = await LoginApi.getTenantIdByName(
-        loginData.loginForm.tenantName
-      )
-      authUtil.setTenantId(res)
     }
   }
   // 记住我
@@ -226,21 +200,7 @@
         password: loginForm.password
           ? loginForm.password
           : loginData.loginForm.password,
-        rememberMe: loginForm.rememberMe,
-        tenantName: loginForm.tenantName
-          ? loginForm.tenantName
-          : loginData.loginForm.tenantName
-      }
-    }
-  }
-  // 根据域名，获得租户信息
-  const getTenantByWebsite = async () => {
-    if (loginData.tenantEnable === 'true') {
-      const website = location.host
-      const res = await LoginApi.getTenantByWebsite(website)
-      if (res) {
-        loginData.loginForm.tenantName = res.name
-        authUtil.setTenantId(res.id)
+        rememberMe: loginForm.rememberMe
       }
     }
   }
@@ -249,7 +209,6 @@
   const handleLogin = async (params: any) => {
     loginLoading.value = true
     try {
-      //await getTenantId()
       const data = await validForm()
       if (!data) {
         return
@@ -260,8 +219,6 @@
       if (!res) {
         return
       }
-      console.log('tenantId', res.tenantId)
-      authUtil.setTenantId(res.tenantId)
       loading.value = ElLoading.service({
         lock: true,
         text: '正在加载系统中...',
@@ -272,7 +229,7 @@
       } else {
         authUtil.removeLoginForm()
       }
-      authUtil.setToken(res)
+      authUtil.applyLoginResult(res)
       if (!redirect.value) {
         redirect.value = '/'
       }
@@ -289,51 +246,10 @@
       }
     } finally {
       loginLoading.value = false
-      loading.value.close()
+      loading.value?.close()
     }
   }
 
-  // 社交登录
-  const doSocialLogin = async (type: number) => {
-    if (type === 0) {
-      message.error('此方式未配置')
-    } else {
-      loginLoading.value = true
-      if (loginData.tenantEnable === 'true') {
-        // 尝试先通过 tenantName 获取租户
-        await getTenantId()
-        // 如果获取不到，则需要弹出提示，进行处理
-        if (!authUtil.getTenantId()) {
-          try {
-            const data = await message.prompt(
-              '请输入租户名称',
-              t('common.reminder')
-            )
-            if (data?.action !== 'confirm') throw 'cancel'
-            const res = await LoginApi.getTenantIdByName(data.value)
-            authUtil.setTenantId(res)
-          } catch (error) {
-            if (error === 'cancel') return
-          } finally {
-            loginLoading.value = false
-          }
-        }
-      }
-      // 计算 redirectUri
-      // 注意: type、redirect 需要先 encode 一次，否则钉钉回调会丢失。
-      // 配合 social-login.vue#getUrlValue() 使用
-      const redirectUri =
-        location.origin +
-        '/social-login?' +
-        encodeURIComponent(`type=${type}&redirect=${redirect.value || '/'}`)
-
-      // 进行跳转
-      window.location.href = await LoginApi.socialAuthRedirect(
-        type,
-        encodeURIComponent(redirectUri)
-      )
-    }
-  }
   watch(
     () => currentRoute.value,
     (route: RouteLocationNormalizedLoaded) => {
@@ -345,7 +261,6 @@
   )
   onMounted(() => {
     getLoginFormCache()
-    //getTenantByWebsite()
   })
 </script>
 

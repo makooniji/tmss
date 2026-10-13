@@ -4,7 +4,7 @@
 
 ## Request game landing URL
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/game/url`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/game/url`
 
 The game operator will open a new window with the provided game url to allow the user to access the game.
 
@@ -43,6 +43,7 @@ This behaviour is vendor-specific and may not apply to all integrations.
 | currency<mark style="color:red;">\*</mark>  | String | ISO-4217 currency code (eg. USD)                                                                        |
 | lobbyUrl<mark style="color:red;">\*</mark>  | String | Operator site Url to navigate the user back to the game lobby.                                          |
 | ipAddress<mark style="color:red;">\*</mark> | String | User's location IP Address in either IPv4 or IPv6 format.                                               |
+| rtp | Number | Game odds configuration (only supported by some manufacturers). |
 
 ```json
 {
@@ -145,7 +146,7 @@ This behaviour is vendor-specific and may not apply to all integrations.
 
 ## Returns the list of supported vendors for the operator.
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/game/vendors`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/game/vendors`
 
 #### Headers
 
@@ -199,7 +200,7 @@ This behaviour is vendor-specific and may not apply to all integrations.
 
 ## Returns the list of supported games for the operator.
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/game/list`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/game/list`
 
 #### Headers
 
@@ -305,7 +306,7 @@ This behaviour is vendor-specific and may not apply to all integrations.
 
 ## Terminates a player's game session.
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/game/terminate`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/game/terminate`
 
 #### Headers
 

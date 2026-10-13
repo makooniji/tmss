@@ -27,16 +27,6 @@ export const register = (data: RegisterVO) => {
   return request.post({ url: '/system/auth/register', data })
 }
 
-// 使用租户名，获得租户编号
-export const getTenantIdByName = (name: string) => {
-  return request.get({ url: '/system/tenant/get-id-by-name?name=' + name })
-}
-
-// 使用租户域名，获得租户信息
-export const getTenantByWebsite = (website: string) => {
-  return request.get({ url: '/system/tenant/get-by-website?website=' + website })
-}
-
 // 登出
 export const loginOut = () => {
   return request.post({ url: '/system/auth/logout' })
@@ -72,7 +62,11 @@ export function socialLogin(type: string, code: string, state: string) {
 // 社交授权的跳转
 export const socialAuthRedirect = (type: number, redirectUri: string) => {
   return request.get({
-    url: '/system/auth/social-auth-redirect?type=' + type + '&redirectUri=' + redirectUri
+    url:
+      '/system/auth/social-auth-redirect?type=' +
+      type +
+      '&redirectUri=' +
+      redirectUri
   })
 }
 // 获取验证图片以及 token

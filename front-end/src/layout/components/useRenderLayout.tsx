@@ -121,9 +121,7 @@ export const useRenderLayout = () => {
   const renderTopLeft = () => {
     return (
       <>
-        <div class="relative flex items-center bg-[var(--top-header-bg-color)] dark:bg-[var(--el-bg-color)]" style="    z-index: 1000;
-    box-shadow: 0 2px 10px #0000001a;
-    background: #fff;padding-top:5px">
+        <div class="relative flex items-center bg-[var(--top-header-bg-color)] dark:bg-[var(--el-bg-color)]" style="z-index: 1000;padding-top:5px" shadow="always">
           {logo.value ? <Logo class="custom-hover"></Logo> : undefined}
 
           <ToolHeader class="flex-1"></ToolHeader>

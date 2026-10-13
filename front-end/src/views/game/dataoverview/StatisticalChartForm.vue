@@ -70,7 +70,9 @@
     tenantCode: undefined as string | undefined,
     tenantName: undefined as string | undefined,
     vendorCode: undefined as string | undefined,
-    vendorName: undefined as string | undefined
+    vendorName: undefined as string | undefined,
+    gameCode: undefined as string | undefined,
+    zone: undefined as string | undefined
   })
 
   watchEffect(() => {
@@ -79,8 +81,11 @@
       if (a && b) {
         queryParams.days = a
         queryParams.endDays = b
+        return
       }
     }
+    queryParams.days = undefined
+    queryParams.endDays = undefined
   })
 
   const metricKey = ref('betAmount')
@@ -209,6 +214,8 @@
     tenantName?: string
     vendorCode?: string
     vendorName?: string
+    gameCode?: string
+    zone?: string
   }
 
   const open = async (
@@ -228,11 +235,21 @@
         daysArr.value = [extra.days, extra.endDays]
         queryParams.days = extra.days
         queryParams.endDays = extra.endDays
+      } else {
+        daysArr.value = null
+        queryParams.days = undefined
+        queryParams.endDays = undefined
       }
       queryParams.tenantCode = extra.tenantCode
       queryParams.tenantName = extra.tenantName
       queryParams.vendorCode = extra.vendorCode
       queryParams.vendorName = extra.vendorName
+      queryParams.gameCode = extra.gameCode
+      queryParams.zone = extra.zone
+    } else {
+      daysArr.value = null
+      queryParams.days = undefined
+      queryParams.endDays = undefined
     }
 
     await nextTick()

@@ -16,7 +16,7 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item :label="t('game.common.merchantName')" prop="tenantName">
+      <!--      <el-form-item :label="t('game.common.merchantName')" prop="tenantName">
         <el-input
           v-model="queryParams.tenantName"
           :placeholder="t('game.common.placeholderMerchantName')"
@@ -24,20 +24,11 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item>
+      </el-form-item>-->
       <el-form-item :label="t('game.common.vendorCodeGame')" prop="vendorCode">
         <el-input
           v-model="queryParams.vendorCode"
           :placeholder="t('game.common.placeholderVendorCodeGame')"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item :label="t('game.common.vendorShortName')" prop="vendorName">
-        <el-input
-          v-model="queryParams.vendorName"
-          :placeholder="t('game.common.placeholderVendorNameShort')"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
@@ -71,7 +62,7 @@
         />
       </el-form-item>
 
-      <el-form-item>
+      <el-form-item class="w-full">
         <el-button @click="handleQuery">
           <Icon icon="ep:search" class="mr-5px" /> {{ t('game.common.search') }}
         </el-button>
@@ -135,19 +126,13 @@
         prop="vendorName"
       />
       <el-table-column
-        :label="t('game.common.iconCol')"
+        :label="t('game.vendor.categoryCode')"
         align="center"
-        prop="logo"
-        width="150"
+        prop="categoryCode"
+        min-width="140"
       >
         <template #default="scope">
-          <el-image
-            v-if="scope.row.logo"
-            style="width: 100px; height: 100px"
-            :src="scope.row.logo"
-            fit="scale-down"
-          />
-          <p v-else>{{ t('game.common.noCover') }}</p>
+          {{ formatCategoryCode(scope.row.categoryCode) }}
         </template>
       </el-table-column>
 
@@ -170,6 +155,13 @@
         :label="t('common.createTime')"
         align="center"
         prop="createTime"
+        :formatter="dateFormatter"
+        width="180px"
+      />
+      <el-table-column
+        :label="t('common.updateTime')"
+        align="center"
+        prop="updateTime"
         :formatter="dateFormatter"
         width="180px"
       />
@@ -219,6 +211,7 @@
   import { dateFormatter } from '@/utils/formatTime'
   import download from '@/utils/download'
   import { VendorTenantApi, VendorTenant } from '@/api/game/vendortenant'
+  import { CategoryApi, Category } from '@/api/game/category'
   import VendorTenantForm from './VendorTenantForm.vue'
 
   /** 租户厂商 列表 */
@@ -230,11 +223,11 @@
   const loading = ref(true) // 列表的加载中
   const list = ref<VendorTenant[]>([]) // 列表的数据
   const total = ref(0) // 列表的总页数
+  const categoryList = ref<Category[]>([])
   const queryParams = reactive({
     pageNo: 1,
     pageSize: 10,
     vendorCode: undefined,
-    vendorName: undefined,
     vendorChannel: undefined,
     vendorAgent: undefined,
     vendorKey: undefined,
@@ -255,6 +248,39 @@
   })
   const queryFormRef = ref() // 搜索的表单
   const exportLoading = ref(false) // 导出的加载中
+
+  const categoryNameMap = computed(() => {
+    const map = new Map<string, string>()
+    categoryList.value.forEach((item) => {
+      if (item.code) {
+        map.set(item.code, item.title || item.code)
+      }
+    })
+    return map
+  })
+
+  const formatCategoryCode = (value?: string) => {
+    if (Array.isArray(value)) {
+      return value
+        .map((code) => code.trim())
+        .filter(Boolean)
+        .map((code) => {
+          const name = categoryNameMap.value.get(code)
+
+          return name || code
+        })
+        .join(',')
+    }
+    return value || '-'
+  }
+
+  const loadCategoryList = async () => {
+    const data = await CategoryApi.getCategoryPage({
+      pageNo: 1,
+      pageSize: 200
+    })
+    categoryList.value = data?.list || []
+  }
 
   /** 查询列表 */
   const getList = async () => {
@@ -280,15 +306,15 @@
     handleQuery()
   }
 
-  // 处理状态变化的方法
-  const handleStatusChange = async (row) => {
+  const handleStatusChange = async (row: VendorTenant) => {
     try {
       await VendorTenantApi.updateVendorTenant({
         id: row.id,
         status: row.status
       })
       message.success(t('common.updateSuccess'))
-    } finally {
+    } catch {
+      row.status = row.status === 0 ? 1 : 0
     }
   }
 
@@ -344,7 +370,8 @@
   }
 
   /** 初始化 **/
-  onMounted(() => {
+  onMounted(async () => {
+    await loadCategoryList()
     getList()
   })
 </script>

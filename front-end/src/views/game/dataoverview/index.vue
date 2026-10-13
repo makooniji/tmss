@@ -5,7 +5,7 @@
       {{ t('game.common.dataOverviewTitle') }}
     </div>
     <el-row :gutter="20" class="row-box">
-      <el-col :span="6" v-for="(item, index) in tabsList" :key="item.key">
+      <el-col :span="8" v-for="(item, index) in tabsList" :key="item.key">
         <div
           :class="['overview-item', 'overview-item' + index]"
           @click="openChart('detail', item.key, item.name)"
@@ -23,11 +23,11 @@
                   >{{ item.unit }}{{ tabsData?.[item.key].betAmount || 0 }}</h3
                 >
               </div>
-              <p>{{ t('game.common.gamePrefix') }}{{ item.name }}</p>
+              <p>{{ item.desc }}</p>
             </div>
             <div class="right" v-else>
               <h3>{{ item.unit }}{{ tabsData?.[item.key] || 0 }}</h3>
-              <p>{{ t('game.common.gamePrefix') }}{{ item.name }}</p>
+              <p>{{ item.desc }}</p>
             </div>
           </div>
         </div>
@@ -43,36 +43,6 @@
       ref="queryFormRef"
       :inline="true"
     >
-      <el-form-item :label="t('game.common.timeRange')" prop="days">
-        <el-date-picker
-          v-model="queryParams.days"
-          value-format="YYYY-MM-DD"
-          type="datetimerange"
-          :range-separator="t('game.common.rangeSeparator')"
-          :start-placeholder="t('game.common.startTime')"
-          :end-placeholder="t('game.common.endTime')"
-          clearable
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item :label="t('game.common.merchantCode')" prop="tenantCode">
-        <el-input
-          v-model="queryParams.tenantCode"
-          :placeholder="t('game.common.placeholderMerchantCode')"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item :label="t('game.common.merchantName')" prop="tenantName">
-        <el-input
-          v-model="queryParams.tenantName"
-          :placeholder="t('game.common.placeholderMerchantName')"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
       <el-form-item :label="t('game.info.vendorCode')" prop="vendorCode">
         <el-input
           v-model="queryParams.vendorCode"
@@ -82,16 +52,35 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item :label="t('game.vendor.vendorName')" prop="vendorName">
-        <el-input
-          v-model="queryParams.vendorName"
-          :placeholder="t('game.vendor.placeholderVendorName')"
+      <el-form-item :label="t('game.common.timeRange')" prop="daysArr">
+        <el-date-picker
+          v-model="daysArr"
+          value-format="YYYY-MM-DD"
+          type="daterange"
+          :shortcuts="dateRangeShortcuts"
+          :range-separator="t('game.common.rangeSeparator')"
+          :start-placeholder="t('game.common.startDate')"
+          :end-placeholder="t('game.common.endDate')"
           clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
+          class="!w-280px"
         />
       </el-form-item>
-      <el-form-item>
+      <el-form-item :label="t('game.common.zoneLabel')" prop="zone">
+        <el-select
+          v-model="queryParams.zone"
+          :placeholder="t('game.common.selectZone')"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.SYSTEM_ZONE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item class="w-full">
         <el-button @click="handleQuery">
           <Icon icon="ep:search" class="mr-5px" /> {{ t('game.common.search') }}
         </el-button>
@@ -114,24 +103,14 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table
-      row-key="id"
+      row-key="vendorCode"
       v-loading="loading"
       :data="list"
       :stripe="true"
       :show-overflow-tooltip="true"
     >
       <el-table-column
-        :label="t('game.common.merchantId')"
-        align="center"
-        prop="tenantCode"
-      />
-      <el-table-column
-        :label="t('game.common.merchantName')"
-        align="center"
-        prop="tenantName"
-      />
-      <el-table-column
-        :label="t('game.common.vendorId')"
+        :label="t('game.info.vendorCode')"
         align="center"
         prop="vendorCode"
       />
@@ -139,16 +118,6 @@
         :label="t('game.vendor.vendorName')"
         align="center"
         prop="vendorName"
-      />
-      <el-table-column
-        :label="t('game.info.gameName')"
-        align="center"
-        prop="gameName"
-      />
-      <el-table-column
-        :label="t('game.common.gameTypeCol')"
-        align="center"
-        prop="gameCode"
       />
       <el-table-column
         :label="t('game.common.totalBets')"
@@ -165,41 +134,42 @@
         align="center"
         prop="payAmount"
       />
-      <el-table-column :label="t('game.common.winLossTotal')" align="center">
-        <template #default="scope">
-          {{ scope.row.payAmount - scope.row.betAmount }}
-        </template>
-      </el-table-column>
+      <el-table-column
+        :label="t('game.common.winLossTotal')"
+        align="center"
+        prop="winLoss"
+      />
       <el-table-column
         :label="t('game.common.rtpColumn')"
         align="center"
         prop="rtp"
       />
       <el-table-column
+        :label="t('game.common.betUsers')"
+        align="center"
+        prop="userBetCount"
+      />
+      <el-table-column
+        :label="t('game.common.profitUsers')"
+        align="center"
+        prop="userWinCount"
+      />
+      <el-table-column
         :label="t('game.common.activePlayers')"
         align="center"
         prop="userCount"
       />
-      <el-table-column :label="t('game.common.perCapitaBet')" align="center">
-        <template #default="scope">
-          {{ scope.row.betAmount / scope.row.userCount }}
-        </template>
-      </el-table-column>
-      <el-table-column :label="t('game.common.avgPayPerUser')" align="center">
-        <template #default="scope">
-          {{ scope.row.payAmount / scope.row.userCount }}
-        </template>
-      </el-table-column>
       <el-table-column
         :label="t('table.action')"
         align="center"
         min-width="120px"
+        fixed="right"
       >
         <template #default="scope">
           <el-button
             link
             type="primary"
-            @click="openForm('detail', scope.row.gameCode)"
+            @click="openForm('detail', scope.row)"
             v-hasPermi="['game:tenant-day-static:query']"
           >
             {{ t('game.common.view') }}
@@ -217,17 +187,16 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <TenantDayStaticForm ref="formRef" @success="getList" />
+  <VendorTenantDayStaticForm ref="formRef" />
   <StatisticalChartForm ref="ChartRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
   import download from '@/utils/download'
-  import {
-    GameDataOverviewApi,
-    GameDataOverview
-  } from '@/api/game/dataoverview'
-  import TenantDayStaticForm from './TenantDayStaticForm.vue'
+  import { useDateRangeShortcuts } from '@/hooks/web/useDateRangeShortcuts'
+  import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+  import { GameDataOverviewApi, VendorDayStatic } from '@/api/game/dataoverview'
+  import VendorTenantDayStaticForm from './VendorTenantDayStaticForm.vue'
   import StatisticalChartForm from './StatisticalChartForm.vue'
 
   /** 租户游戏日报 列表 */
@@ -242,47 +211,140 @@
   }
 
   const loading = ref(true) // 列表的加载中
-  const list = ref<GameDataOverview[]>([]) // 列表的数据
+  const list = ref<VendorDayStatic[]>([]) // 列表的数据
   const total = ref(0) // 列表的总页数
+  const daysArr = ref<[string, string] | undefined>()
+  const dateRangeShortcuts = useDateRangeShortcuts()
   const queryParams = reactive({
     pageNo: 1,
     pageSize: 10,
-    days: [],
-    tenantCode: undefined,
-    tenantName: undefined,
+    days: undefined as string | undefined,
+    endDays: undefined as string | undefined,
     vendorCode: undefined,
-    vendorName: undefined
+    zone: undefined
   })
   const queryFormRef = ref() // 搜索的表单
   const exportLoading = ref(false) // 导出的加载中
 
-  const tabsList = computed(() => [
-    { name: t('game.common.betTotalAmount'), key: 'betAmount', unit: '$' },
-    { name: t('game.common.payTotalAmount'), key: 'payAmount', unit: '$' },
-    { name: t('game.common.winLossTotal'), key: 'winLoss', unit: '$' },
-    { name: t('game.common.totalBetCount'), key: 'betCount', unit: '' },
-    { name: t('game.common.rtp'), key: 'rtp', unit: '' },
-    {
-      name: t('game.common.gameBetRate'),
-      key: 'userBetCountUserCount',
-      unit: ''
-    },
-    {
-      name: t('game.common.gameCountARPPU'),
-      key: 'betCountUserBetCount',
-      unit: ''
-    },
-    { name: t('game.common.hotGameARPPU'), key: 'hotGame', unit: '$' }
-  ])
+  /** 是否已选择有效日期范围 */
+  const hasValidDateRange = () =>
+    Array.isArray(daysArr.value) &&
+    daysArr.value.length >= 2 &&
+    daysArr.value[0] &&
+    daysArr.value[1]
+
+  // 日期选择器同步为接口字段 days、endDays
+  watchEffect(() => {
+    if (hasValidDateRange()) {
+      queryParams.days = daysArr.value![0]
+      queryParams.endDays = daysArr.value![1]
+      return
+    }
+    queryParams.days = undefined
+    queryParams.endDays = undefined
+  })
+
+  /** 校验搜索参数（不弹提示） */
+  const checkSearchParams = () => {
+    if (queryParams.zone && !hasValidDateRange()) {
+      return false
+    }
+    if (hasValidDateRange() && !queryParams.zone) {
+      return false
+    }
+    return true
+  }
+
+  /** 时区与日期范围需同时选择 */
+  const validateSearchParams = () => {
+    if (queryParams.zone && !hasValidDateRange()) {
+      message.warning(t('game.common.zoneRequiresDateRange'))
+      return false
+    }
+    if (hasValidDateRange() && !queryParams.zone) {
+      message.warning(t('game.common.dateRequiresZone'))
+      return false
+    }
+    return true
+  }
+
+  const tabsList = computed(() => {
+    const prefix = t('game.common.gamePrefix')
+    return [
+      {
+        name: t('game.common.betTotalAmount'),
+        key: 'betAmount',
+        unit: '$',
+        desc: prefix + t('game.common.betTotalAmount')
+      },
+      {
+        name: t('game.common.payTotalAmount'),
+        key: 'payAmount',
+        unit: '$',
+        desc: prefix + t('game.common.payTotalAmount')
+      },
+      {
+        name: t('game.common.winLossTotal'),
+        key: 'winLoss',
+        unit: '$',
+        desc: t('game.common.gameTotalWinLossDesc')
+      },
+      {
+        name: t('game.common.totalBetCount'),
+        key: 'betCount',
+        unit: '',
+        desc: prefix + t('game.common.totalBetCount')
+      },
+      {
+        name: t('game.common.rtp'),
+        key: 'rtp',
+        unit: '',
+        desc: t('game.common.gameRtpRateDesc')
+      },
+      {
+        name: t('game.common.gameBetRate'),
+        key: 'userBetCountUserCount',
+        unit: '',
+        desc: t('game.common.gameBetRateDesc')
+      },
+      {
+        name: t('game.common.gameCountARPPU'),
+        key: 'betCountUserBetCount',
+        unit: '',
+        desc: t('game.common.gameCountARPPUDesc')
+      },
+      {
+        name: t('game.common.hotGameARPPU'),
+        key: 'hotGame',
+        unit: '$',
+        desc: t('game.common.hotGameARPPUDesc')
+      }
+    ]
+  })
 
   const tabsData = ref()
 
+  const buildRequestParams = () => {
+    const params: Record<string, unknown> = {
+      pageNo: queryParams.pageNo,
+      pageSize: queryParams.pageSize
+    }
+    if (queryParams.days) params.days = queryParams.days
+    if (queryParams.endDays) params.endDays = queryParams.endDays
+    if (queryParams.vendorCode) params.vendorCode = queryParams.vendorCode
+    if (queryParams.zone) params.zone = queryParams.zone
+    return params
+  }
+
   /** 查询列表 */
   const getList = async () => {
+    if (!checkSearchParams()) {
+      return
+    }
     loading.value = true
     try {
       const data =
-        await GameDataOverviewApi.getGameDataOverviewPage(queryParams)
+        await GameDataOverviewApi.getVendorStaticPage(buildRequestParams())
       list.value = data.list
       total.value = data.total
     } finally {
@@ -291,8 +353,12 @@
   }
 
   const gettotal = async () => {
+    if (!checkSearchParams()) {
+      return
+    }
     try {
-      const data = await GameDataOverviewApi.gettenantstatictotal(queryParams)
+      const data =
+        await GameDataOverviewApi.getVendorStaticTotal(buildRequestParams())
       data.userBetCountUserCount = (data.userBetCount / data.userCount).toFixed(
         2
       )
@@ -304,49 +370,54 @@
 
   /** 搜索按钮操作 */
   const handleQuery = () => {
+    if (!validateSearchParams()) {
+      return
+    }
     queryParams.pageNo = 1
     getList()
+    gettotal()
   }
 
   /** 重置按钮操作 */
   const resetQuery = () => {
+    daysArr.value = undefined
     queryFormRef.value.resetFields()
     handleQuery()
   }
 
   /** 查看操作 */
   const formRef = ref()
-  const openForm = (type: string, gameCode?: string) => {
-    formRef.value.open(type, gameCode)
+  const openForm = (type: string, row: VendorDayStatic) => {
+    formRef.value.open(type, row, {
+      days: queryParams.days,
+      endDays: queryParams.endDays,
+      zone: queryParams.zone
+    })
   }
 
   const ChartRef = ref()
   const openChart = (type: string, key?: string, name?: string) => {
-    const d = queryParams.days as unknown
     const range =
-      Array.isArray(d) && d.length >= 2 && d[0] && d[1]
-        ? { days: String(d[0]), endDays: String(d[1]) }
+      queryParams.days && queryParams.endDays
+        ? { days: queryParams.days, endDays: queryParams.endDays }
         : {}
     ChartRef.value.open(type, key, name, {
       ...range,
-      tenantCode: queryParams.tenantCode,
-      tenantName: queryParams.tenantName,
       vendorCode: queryParams.vendorCode,
-      vendorName: queryParams.vendorName
+      zone: queryParams.zone
     })
-  }
-
-  const checkedIds = ref<number[]>([])
-  const handleRowCheckboxChange = (records: GameDataOverview[]) => {
-    checkedIds.value = records.map((item) => item.id!)
   }
 
   /** 导出按钮操作 */
   const handleExport = async () => {
+    if (!validateSearchParams()) {
+      return
+    }
     try {
       await message.exportConfirm()
       exportLoading.value = true
-      const data = await GameDataOverviewApi.exportGameDataOverview(queryParams)
+      const data =
+        await GameDataOverviewApi.exportVendorStatic(buildRequestParams())
       download.excel(data, t('game.common.exportDataOverview'))
     } catch {
     } finally {
@@ -380,20 +451,31 @@
     .item-box {
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      gap: 8px;
 
-      .left p {
-        font-size: 16px;
-        font-weight: 600;
+      .left {
+        flex: 0 0 auto;
+
+        p {
+          font-size: 16px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
       }
 
       .right {
         display: flex;
+        min-width: 240px;
+        flex: 1 1 auto;
         flex-direction: column;
         gap: 2px;
         align-items: end;
 
         p {
+          display: block;
           text-align: right;
+          white-space: nowrap;
         }
       }
     }

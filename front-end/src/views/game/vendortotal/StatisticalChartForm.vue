@@ -30,13 +30,15 @@
     <div>
       <el-card class="mb-8px" shadow="hover">
         <el-skeleton :loading="loading" animated>
-          <Echart :height="350" :options="lineOptionsData" />
+          <el-empty v-if="lineEmpty" description="暂无数据" :image-size="80" />
+          <Echart v-else :height="350" :options="lineOptionsData" />
         </el-skeleton>
       </el-card>
 
       <el-card shadow="hover" class="mb-8px">
         <el-skeleton :loading="loading" animated>
-          <Echart :options="barOptionsData" :height="280" />
+          <el-empty v-if="barEmpty" description="暂无数据" :image-size="80" />
+          <Echart v-else :options="barOptionsData" :height="280" />
         </el-skeleton>
       </el-card>
     </div>
@@ -72,17 +74,24 @@
   })
 
   watchEffect(() => {
-    if (Array.isArray(daysArr.value) && daysArr.value.length >= 2) {
-      const [a, b] = daysArr.value
-      if (a && b) {
-        queryParams.days = a
-        queryParams.endDays = b
-      }
+    if (
+      Array.isArray(daysArr.value) &&
+      daysArr.value.length >= 2 &&
+      daysArr.value[0] &&
+      daysArr.value[1]
+    ) {
+      queryParams.days = daysArr.value[0]
+      queryParams.endDays = daysArr.value[1]
+      return
     }
+    queryParams.days = undefined
+    queryParams.endDays = undefined
   })
 
   const metricKey = ref('betAmount')
   const title = ref<string | undefined>()
+  const lineEmpty = ref(false)
+  const barEmpty = ref(false)
 
   const barOptionsData = reactive<EChartsOption>(barOptions) as EChartsOption
   const lineOptionsData = reactive<EChartsOption>(lineOptions) as EChartsOption
@@ -98,6 +107,39 @@
         return o.records as Record<string, unknown>[]
     }
     return []
+  }
+
+  const isTenantStatusMetric = (key: string) =>
+    key === 'openCounts' || key === 'operCounts' || key === 'closeCounts'
+
+  /** 柱状图标题 */
+  function getBarChartTitle(key: string): string {
+    if (key === 'openCounts') {
+      return '商户已开通天数'
+    }
+    if (key === 'operCounts') {
+      return '已运营商户投注总额'
+    }
+    if (key === 'closeCounts') {
+      return '商户投注总额'
+    }
+    return t('game.chart.barTop10', {
+      title: `${t('game.common.gamePrefix')}${title.value ?? ''}`
+    })
+  }
+
+  /** 柱状图取值字段 */
+  function getBarMetricValue(
+    row: Record<string, unknown>,
+    key: string
+  ): number {
+    if (key === 'openCounts') {
+      return Number(row.openDays ?? 0)
+    }
+    if (key === 'operCounts' || key === 'closeCounts') {
+      return Number(row.betAmount ?? 0)
+    }
+    return pickMetric(row, key)
   }
 
   function pickMetric(row: Record<string, unknown>, key: string): number {
@@ -129,11 +171,11 @@
     const res = await GameDataOverviewApi.getchartDayInfo(queryParams)
     const data = unwrapRows(res)
     const key = metricKey.value
+    barEmpty.value = data.length === 0
+    if (barEmpty.value) return
 
     set(barOptionsData, 'title', {
-      text: t('game.chart.barTop10', {
-        title: `${t('game.common.gamePrefix')}${title.value ?? ''}`
-      }),
+      text: getBarChartTitle(key),
       subtext: '',
       left: 'center',
       top: 10,
@@ -146,8 +188,10 @@
     )
     set(barOptionsData, 'series', [
       {
-        name: String(title.value ?? key),
-        data: data.map((v) => pickMetric(v, key)),
+        name: isTenantStatusMetric(key)
+          ? getBarChartTitle(key)
+          : String(title.value ?? key),
+        data: data.map((v) => getBarMetricValue(v, key)),
         type: 'bar'
       }
     ])
@@ -158,6 +202,9 @@
     const res = await GameDataOverviewApi.getchartDayTotal(queryParams)
     const data = unwrapRows(res)
     const key = metricKey.value
+    const tenantStatus = isTenantStatusMetric(key)
+    lineEmpty.value = data.length === 0
+    if (lineEmpty.value) return
 
     set(lineOptionsData, 'title', {
       text: t('game.chart.lineTitle', { title: title.value ?? '' }),
@@ -179,7 +226,10 @@
         itemStyle: { color: '#FFA500' },
         symbol: 'circle',
         symbolSize: 5,
-        data: data.map((v) => pickMetric(v, key)),
+        // 已开通/已运营/已停用：折线图取 counts，X 轴仍用 days
+        data: data.map((v) =>
+          tenantStatus ? Number(v.counts ?? 0) : pickMetric(v, key)
+        ),
         animationDuration: 2800,
         animationEasing: 'quadraticOut',
         areaStyle: { color: 'rgba(255, 165, 0, 0.3)' }
@@ -211,13 +261,21 @@
     dialogTitle.value = t('action.' + type)
     title.value = name
     metricKey.value = key || 'betAmount'
-    queryParams.orderBy = key || ''
+    // 已开通/已运营/已停用商户统一按 openCounts 排序
+    queryParams.orderBy =
+      key === 'openCounts' || key === 'operCounts' || key === 'closeCounts'
+        ? 'openCounts'
+        : key || ''
     queryParams.status = status ?? 0
 
     if (extra?.days && extra?.endDays) {
       daysArr.value = [extra.days, extra.endDays]
       queryParams.days = extra.days
       queryParams.endDays = extra.endDays
+    } else {
+      daysArr.value = null
+      queryParams.days = undefined
+      queryParams.endDays = undefined
     }
 
     await nextTick()

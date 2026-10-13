@@ -8,10 +8,10 @@
       :inline="true"
       label-width="100px"
     >
-      <el-form-item :label="t('game.common.vendorId')" prop="vendorId">
+      <el-form-item :label="t('game.common.merchantCode')" prop="tenantCode">
         <el-input
-          v-model="queryParams.vendorId"
-          :placeholder="t('game.common.placeholderVendorId')"
+          v-model="queryParams.tenantCode"
+          :placeholder="t('game.common.placeholderMerchantCode')"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
@@ -143,7 +143,12 @@
 
       <el-table-column :label="t('common.status')" align="center" prop="status">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.COMMON_STATUS" :value="scope.row.status" />
+          <el-switch
+            v-model="scope.row.status"
+            :active-value="0"
+            :inactive-value="1"
+            @change="handleStatusChange(scope.row)"
+          />
         </template>
       </el-table-column>
       <el-table-column
@@ -199,7 +204,7 @@
   const queryParams = reactive({
     pageNo: 1,
     pageSize: 10,
-    vendorId: undefined,
+    tenantCode: undefined,
     vendorCode: undefined,
     userId: undefined,
     username: undefined,
@@ -208,6 +213,15 @@
   })
   const queryFormRef = ref() // 搜索的表单
   const exportLoading = ref(false) // 导出的加载中
+
+  const handleStatusChange = async (row: VendorUser) => {
+    try {
+      await VendorUserApi.updateVendorUserStatus(row.id, row.status!)
+      message.success(t('common.updateSuccess'))
+    } catch {
+      row.status = row.status === 0 ? 1 : 0
+    }
+  }
 
   /** 查询列表 */
   const getList = async () => {

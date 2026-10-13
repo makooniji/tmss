@@ -115,7 +115,7 @@
 
 每笔下注交易由`transactionId`标识，运营商应该验证该下注交易之前是否已经处理过。
 
-<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID `transactionId` 进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（SC_OK）。
+<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID `transactionId` 进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（OK）。
 
 #### Headers
 
@@ -244,7 +244,7 @@
 当用户下注或收到下注结果时，由WooApi集成系统调用。\
 运营商应该根据结果类型 `resultType` 更新用户的钱包余额，并返回最终余额。
 
-<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID `transactionId` 进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（SC_OK）。
+<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID `transactionId` 进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（OK）。
 
 #### Headers
 
@@ -304,7 +304,7 @@
 由WooApi集成系统调用，以撤销先前的下注交易。\
 运营商应该根据给定的下注ID找到先前的下注交易，以撤销其对用户余额的影响（借记/贷记），并返回最新的余额。
 
-<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（SC_OK）。
+<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（OK）。
 
 #### Headers
 
@@ -352,9 +352,9 @@
 
 由WooApi集成系统调用，以调整先前下注交易的赢取/输掉结果。运营商应该在用户的钱包中添加或扣除给定的金额，并返回最新的余额。
 
-此API端点支持特定游戏产品；完整的支持产品列表请参阅《[ji-cheng-chan-pin-yu-api-duan-dian-jian-rong-xing-xiang-xi-zhi-nan](https://apidoc-gasea.gitbook.io/zh-operator-seamless-wallet-api-documentation-v3/api-reference/ji-cheng-chan-pin-yu-api-duan-dian-jian-rong-xing-xiang-xi-zhi-nan 'mention')》页面。
+此API端点支持特定游戏产品；完整的支持产品列表请参阅《[集成产品与API端点兼容性详细指南]》页面。
 
-<mark style="color:red;">**重要提示**</mark>: 此API调用是幂等的，使用相同的交易ID进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（SC_OK）。
+<mark style="color:red;">**重要提示**</mark>: 此API调用是幂等的，使用相同的交易ID进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（OK）。
 
 #### Headers
 
@@ -402,9 +402,9 @@
 
 当用户进入游戏房间并将额度转入游戏时，由WooApi集成系统调用。运营商需从用户钱包中扣除指定金额，并返回用户的最新余额。
 
-此API端点支持特定游戏产品；完整的支持产品列表请参阅《[ji-cheng-chan-pin-yu-api-duan-dian-jian-rong-xing-xiang-xi-zhi-nan](https://apidoc-gasea.gitbook.io/zh-operator-seamless-wallet-api-documentation-v3/api-reference/ji-cheng-chan-pin-yu-api-duan-dian-jian-rong-xing-xiang-xi-zhi-nan 'mention')》页面。
+此API端点支持特定游戏产品；完整的支持产品列表请参阅《[集成产品与API端点兼容性详细指南]》页面。
 
-<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID `transactionId` 进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（SC_OK）。
+<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID `transactionId` 进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（OK）。
 
 #### Headers
 
@@ -453,9 +453,9 @@
 
 由WooApi集成系统调用，用于在游戏回合结束或需要余额调整时更新玩家的钱包余额。该端点可用于结算投注和中奖记录或处理余额调整。运营方必须将 `amount` 参数中指定的剩余余额加回到用户的钱包中。`betAmount` 和 `winAmount` 参数仅供参考，无需进一步处理。
 
-此API端点支持特定游戏产品；完整的支持产品列表请参阅《[ji-cheng-chan-pin-yu-api-duan-dian-jian-rong-xing-xiang-xi-zhi-nan](https://apidoc-gasea.gitbook.io/zh-operator-seamless-wallet-api-documentation-v3/api-reference/ji-cheng-chan-pin-yu-api-duan-dian-jian-rong-xing-xiang-xi-zhi-nan 'mention')》页面。
+此API端点支持特定游戏产品；完整的支持产品列表请参阅《[集成产品与API端点兼容性详细指南]》页面。
 
-<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID `transactionId` 进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（SC_OK）。
+<mark style="color:red;">**重要提示**</mark>: 此API调用是**幂等的**，使用相同的交易ID `transactionId` 进行多次调用不应再次处理，如果运营商之前成功处理过该交易，则应返回用户的最新余额（OK）。
 
 #### Headers
 

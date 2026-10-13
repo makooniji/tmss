@@ -6,6 +6,7 @@ export interface VendorTenant {
   id: number // 主键
   vendorCode?: string // 游戏厂商编码
   vendorName: string // 游戏厂商简称
+  categoryCode?: string // 厂商所属类型（来自 game_vendor，逗号分隔）
   vendorChannel: string // 通道
   vendorAgent: string // 账号
   vendorKey: string // 私钥
@@ -30,6 +31,14 @@ export const VendorTenantApi = {
     return await request.get({ url: `/game/vendor-tenant/page`, params })
   },
 
+  // 查询当前租户厂商分页（不含子级租户）
+  getTenantVendorPage: async (params: any) => {
+    return await request.get({
+      url: `/game/vendor-tenant/tenant-vendor-page`,
+      params
+    })
+  },
+
   // 查询租户厂商详情
   getVendorTenant: async (id: number) => {
     return await request.get({ url: `/game/vendor-tenant/get?id=` + id })
@@ -41,7 +50,9 @@ export const VendorTenantApi = {
   },
 
   // 修改租户厂商
-  updateVendorTenant: async (data: VendorTenant) => {
+  updateVendorTenant: async (
+    data: VendorTenant | Pick<VendorTenant, 'id' | 'status'>
+  ) => {
     return await request.put({ url: `/game/vendor-tenant/update`, data })
   },
 

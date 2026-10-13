@@ -12,7 +12,6 @@ import {
   getAccessToken,
   getRefreshToken,
   getTenantId,
-  getVisitTenantId,
   removeToken,
   setToken
 } from '@/utils/auth'
@@ -45,7 +44,7 @@ const whiteList: string[] = ['/login', '/refresh-token']
 
 // 创建axios实例
 const service: AxiosInstance = axios.create({
-  baseURL: base_url+import.meta.env.VITE_API_URL, // api 的 base_url
+  baseURL: base_url + import.meta.env.VITE_API_URL, // api 的 base_url
   timeout: request_timeout, // 请求超时时间
   withCredentials: false, // 禁用 Cookie 等信息
   // 自定义参数序列化函数
@@ -57,7 +56,7 @@ const service: AxiosInstance = axios.create({
 // request拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig & { customPath?: string }) => {
-    console.log("customPath>>>>>>>>",config.customPath)  
+    console.log('customPath>>>>>>>>', config.customPath)
     // 如果请求参数中携带了 customPath
     if (config.customPath) {
       // 强制重新拼接本次请求的 baseURL
@@ -75,14 +74,11 @@ service.interceptors.request.use(
     if (getAccessToken() && !isToken) {
       config.headers.Authorization = 'Bearer ' + getAccessToken() // 让每个请求携带自定义token
     }
-    // 设置租户
+    // 设置租户（仅使用登录接口缓存的 tenant-id）
     if (tenantEnable && tenantEnable === 'true') {
       const tenantId = getTenantId()
-      if (tenantId) config.headers['tenant-id'] = tenantId
-      // 只有登录时，才设置 visit-tenant-id 访问租户
-      const visitTenantId = getVisitTenantId()
-      if (config.headers.Authorization && visitTenantId) {
-        config.headers['visit-tenant-id'] = visitTenantId
+      if (tenantId != null && tenantId !== '') {
+        config.headers['tenant-id'] = tenantId
       }
     }
 
@@ -273,9 +269,18 @@ service.interceptors.response.use(
 )
 
 const refreshToken = async () => {
-  axios.defaults.headers.common['tenant-id'] = getTenantId()
+  const tenantId = getTenantId()
+  const headers: Record<string, string | number> = {}
+  if (tenantId != null && tenantId !== '') {
+    headers['tenant-id'] = tenantId
+  }
   return await axios.post(
-    base_url + '/system/auth/refresh-token?refreshToken=' + getRefreshToken()
+    base_url +
+      import.meta.env.VITE_API_URL +
+      '/system/auth/refresh-token?refreshToken=' +
+      getRefreshToken(),
+    {},
+    { headers }
   )
 }
 const handleAuthorized = () => {

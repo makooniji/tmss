@@ -4,7 +4,7 @@
 
 ## 返回特定时间段内的交易列表
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/transaction/list`&#x20;
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/transaction/list`&#x20;
 
 游戏运营商可以通过结算时间查询来获取交易历史列表。&#x20;
 
@@ -46,52 +46,30 @@
   "status": "OK",
   "message": "Successful response.",
   "data": {
-    "headers": {
-      "betId": 0,
-      "roundId": 1,
-      "externalTransactionId": 2,
-      "username": 3,
-      "currencyCode": 4,
-      "gameCode": 5,
-      "vendorCode": 6,
-      "gameCategoryCode": 7,
-      "betAmount": 8,
-      "winAmount": 9,
-      "winLoss": 10,
-      "effectiveTurnover": 11,
-      "jackpotAmount": 12,
-      "status": 13,
-      "vendorBetTime": 14,
-      "vendorSettleTime": 15,
-      "isFreeSpin": 16,
-      "vendorBetId": 17
-    },
-    "transactions": [
-      [
-        "3358049710",
-        "8865512900",
-        "8865512900",
-        "alex50",
-        "CNY",
-        "PP_vs7monkeys",
-        "PP",
-        "SLOTS",
-        5.6,
-        11.0,
-        5.4,
-        5.6,
-        0.0,
-        2,
-        1681467405636,
-        1681467405862,
-        "TRUE",
-        "8865512900"
-      ]
-    ],
-    "currentPage": 1,
-    "totalItems": 0,
-    "totalPages": 0
-  }
+        "currentPage": 0,
+        "totalCount": {},
+        "total": 0,
+        "list": [
+            {
+                "betId": "string",
+                "roundId": "string",
+                "externalTransactionId": "string",
+                "username": "string",
+                "gameCode": "string",
+                "currencyCode": "string",
+                "vendorCode": "string",
+                "betContent": "string",
+                "betAmount": 0,
+                "winAmount": 0,
+                "winLoss": 0,
+                "effectiveTurnover": 0,
+                "jackpotAmount": 0,
+                "status": 0,
+                "vendorBetTime": 0,
+                "vendorSettleTime": 0
+            }
+        ]
+    }
 }
 ```
 
@@ -99,7 +77,7 @@
 
 ## 获取特定投注交易的详细交易信息&#x20;
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/v2/transaction/detail`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/transaction/detail`
 
 此 API 允许游戏运营商通过提供 `betId` 并指定时间范围（使用 `fromTime` 和 `toTime` 参数，均为 UNIX 时间戳格式）来获取单笔交易的详细历史记录。
 
@@ -139,32 +117,27 @@
 
 ```json
 {
-  "traceId": "6caee2f4-f636-449d-be67-e81d63394dd0",
-  "status": "OK",
-  "message": "Successful response.",
-  "data": {
-    "detailUrl": "https://public.pg-redirect.net/history/redirect.html?trace_id=64591026-ec82-4b76-9cca-958bfce047d3&t=7D1DE1DD-883F-44BA-8003-5312F15024CF&psid=1646444472307331072&sid=1646444515999514624&lang=zh&type=operator",
-    "betDetail": {
-      "betId": "1646444515999514624",
-      "externalTransactionId": "1646444515999514624",
-      "roundId": "1646444472307331072",
-      "username": "dfasdfgasdfasdf",
-      "currencyCode": "CNY",
-      "gameCode": "PGS_100",
-      "vendorCode": "PGS",
-      "gameCategoryCode": "SLOTS",
-      "betAmount": 1010.0,
-      "winAmount": 0.0,
-      "winLoss": -1010.0,
-      "effectiveTurnover": 1010.0,
-      "jackpotAmount": 0.0,
-      "refundAmount": 0.0,
-      "status": 2,
-      "isFreeSpin": "TRUE",
-      "vendorBetTime": 1672985880016,
-      "vendorSettleTime": 1672985880016
+    "traceId": "string",
+    "status": "OK",
+    "message": "string",
+    "data": {
+        "betId": "string",
+        "roundId": "string",
+        "externalTransactionId": "string",
+        "username": "string",
+        "gameCode": "string",
+        "currencyCode": "string",
+        "vendorCode": "string",
+        "betContent": "string",
+        "betAmount": 0,
+        "winAmount": 0,
+        "winLoss": 0,
+        "effectiveTurnover": 0,
+        "jackpotAmount": 0,
+        "status": 0,
+        "vendorBetTime": 0,
+        "vendorSettleTime": 0
     }
-  }
 }
 ```
 

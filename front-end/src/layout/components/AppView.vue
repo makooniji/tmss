@@ -34,7 +34,7 @@ provide('reload', reload)
 </script>
 
 <template>
-  <section style="z-index: 1000; box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 10px; background: rgb(255, 255, 255);" :class="[
+  <section style="z-index: 1000;" shadow="always" :class="[
     'p-[var(--app-content-padding)] w-full bg-[var(--app-content-bg-color)] dark:bg-[var(--el-bg-color)]',
     {
       '!min-h-[calc(100vh-var(--top-tool-height)-var(--tags-view-height)-var(--app-footer-height))] pb-0':

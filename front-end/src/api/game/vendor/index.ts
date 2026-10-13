@@ -1,19 +1,20 @@
 import request from '@/config/axios'
-import type { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs'
 
 /** 游戏厂商信息 */
 export interface Vendor {
-          id: number; // 主键
-          vendorCode?: string; // 游戏厂商编码
-          vendorName: string; // 游戏厂商简称
-          // logo: string; // LOGO
-          // currency: string; // 货币
-          // status: number; // 状态
-          // logo: string; // LOGO
-          // currency: string; // 货币
-          // status: number; // 状态
-          remark: string; // 备注
-  }
+  id: number // 主键
+  vendorCode?: string // 游戏厂商编码
+  vendorName: string // 游戏厂商简称
+  categoryCode?: string // 厂商所属类型（分类编码，逗号分隔）
+  logo?: string // LOGO
+  currency?: string | string[] // 货币
+  supportLang?: string // 支持语言
+  status?: number // 状态
+  remark: string // 备注
+  createTime?: string
+  updateTime?: string
+}
 
 // 游戏厂商 API
 export const VendorApi = {
@@ -44,7 +45,9 @@ export const VendorApi = {
 
   /** 批量删除游戏厂商 */
   deleteVendorList: async (ids: number[]) => {
-    return await request.delete({ url: `/game/vendor/delete-list?ids=${ids.join(',')}` })
+    return await request.delete({
+      url: `/game/vendor/delete-list?ids=${ids.join(',')}`
+    })
   },
 
   // 导出游戏厂商 Excel

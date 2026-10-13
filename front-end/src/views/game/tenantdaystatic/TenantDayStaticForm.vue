@@ -7,9 +7,7 @@
           <div class="overview-item">
             <p>
               {{ item.name }}
-              <span
-                ><b v-if="item.location == 'left'">{{ item.unit }}</b
-                >{{ totalData?.[item.value] || 0 }}
+              <span><b v-if="item.location == 'left'">{{ item.unit }}</b>{{ totalData?.[item.value] || 0 }}
                 <b v-if="item.location == 'right'">{{ item.unit }}</b>
               </span>
             </p>
@@ -28,24 +26,20 @@
 
     <ContentWrap>
       <!-- 搜索工作栏 -->
-      <el-form
-        class="-mb-15px"
-        :model="queryParams"
-        ref="queryFormRef"
-        :inline="true"
-      >
-        <el-form-item label="" prop="name">
-          <el-input
-            v-model="queryParams.name"
-            :placeholder="t('game.common.placeholderSearchAccount')"
-            clearable
-            class="!w-240px"
-          />
+      <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true">
+        <el-form-item label="" prop="userId">
+          <el-input v-model="queryParams.userId" :placeholder="t('game.common.playerId')" clearable class="!w-240px"
+            @keyup.enter="handleQuery" @clear="handleQuery" />
         </el-form-item>
         <el-form-item>
           <el-button @click="handleQuery">
             <Icon icon="ep:search" class="mr-5px" />
             {{ t('game.common.search') }}
+          </el-button>
+          <el-button type="success" plain @click="handleExport" :loading="exportLoading"
+            v-hasPermi="['game:records:export']">
+            <Icon icon="ep:download" class="mr-5px" />
+            {{ t('action.export') }}
           </el-button>
         </el-form-item>
       </el-form>
@@ -53,70 +47,24 @@
 
     <!-- 列表 -->
     <ContentWrap>
-      <el-table
-        row-key="id"
-        v-loading="loading"
-        :data="list"
-        :stripe="true"
-        :show-overflow-tooltip="true"
-      >
-        <el-table-column
-          :label="t('game.common.playerId')"
-          align="center"
-          prop="userId"
-        />
-        <el-table-column
-          :label="t('game.common.playerAccount')"
-          align="center"
-          prop="username"
-        />
-        <el-table-column
-          :label="t('game.common.betAmount')"
-          align="center"
-          prop="betAmount"
-        />
-        <el-table-column
-          :label="t('game.common.odds')"
-          align="center"
-          prop="odds"
-        />
-        <el-table-column
-          :label="t('game.common.payAmount')"
-          align="center"
-          prop="winAmount"
-        />
-        <el-table-column
-          :label="t('game.common.winLossCol')"
-          align="center"
-          prop="winLoss"
-        />
-        <el-table-column
-          :label="t('common.status')"
-          align="center"
-          prop="action"
-        >
+      <el-table row-key="id" v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
+        <el-table-column :label="t('game.common.playerId')" align="center" prop="userId" />
+        <el-table-column :label="t('game.common.playerAccount')" align="center" prop="username" />
+        <el-table-column :label="t('game.common.betAmount')" align="center" prop="betAmount" />
+        <el-table-column :label="t('game.common.odds')" align="center" prop="odds" />
+        <el-table-column :label="t('game.common.payAmount')" align="center" prop="winAmount" />
+        <el-table-column :label="t('game.common.winLossCol')" align="center" prop="winLoss" />
+        <el-table-column :label="t('common.status')" align="center" prop="action">
           <template #default="scope">
-            <dict-tag
-              :type="DICT_TYPE.SYSTEM_GAME_RECORD_ACTION"
-              :value="scope.row.action"
-            />
+            <dict-tag :type="DICT_TYPE.SYSTEM_GAME_RECORD_ACTION" :value="scope.row.action" />
           </template>
         </el-table-column>
-        <el-table-column
-          :label="t('common.createTime')"
-          align="center"
-          prop="createTime"
-          width="180"
-          :formatter="dateFormatter"
-        />
+        <el-table-column :label="t('common.createTime')" align="center" prop="createTime" width="180"
+          :formatter="dateFormatter" />
       </el-table>
       <!-- 分页 -->
-      <Pagination
-        :total="total"
-        v-model:page="queryParams.pageNo"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-      />
+      <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize"
+        @pagination="getList" />
     </ContentWrap>
 
     <template #footer>
@@ -127,194 +75,272 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-  import { GameDataOverviewApi } from '@/api/game/dataoverview'
-  import { DICT_TYPE } from '@/utils/dict'
-  import { dateFormatter } from '@/utils/formatTime'
+import download from '@/utils/download'
+import { GameDataOverviewApi } from '@/api/game/dataoverview'
+import { RecordsApi } from '@/api/game/records'
+import { TenantDayStaticApi } from '@/api/game/tenantdaystatic'
+import { DICT_TYPE } from '@/utils/dict'
+import { dateFormatter } from '@/utils/formatTime'
 
-  /** 租户游戏日报 表单 */
-  defineOptions({ name: 'TenantDayStaticForm' })
+/** 租户游戏日报 表单 */
+defineOptions({ name: 'TenantDayStaticForm' })
 
-  const { t } = useI18n() // 国际化
+const message = useMessage()
+const { t } = useI18n() // 国际化
 
-  const dialogVisible = ref(false) // 弹窗的是否展示
-  const dialogTitle = ref('') // 弹窗的标题
-  const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
-  const formType = ref('') // 表单的类型：create - 新增；update - 修改
-  const formData = ref({
-    id: undefined,
-    days: undefined,
-    tenantCode: undefined,
-    tenantName: undefined,
-    vendorCode: undefined,
-    vendorName: undefined
-  })
+const dialogVisible = ref(false) // 弹窗的是否展示
+const dialogTitle = ref('') // 弹窗的标题
+const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
+const formType = ref('') // 表单的类型：create - 新增；update - 修改
+const formData = ref({
+  id: undefined,
+  days: undefined,
+  tenantCode: undefined,
+  tenantName: undefined,
+  vendorCode: undefined,
+  vendorName: undefined
+})
 
-  const DataDetails = computed(() => [
-    { name: `${t('game.info.gameName')}:`, value: 'gameName' },
-    {
-      name: `${t('game.common.totalBets')}:`,
-      value: 'betCount',
-      unit: t('game.records.timesUnit'),
-      location: 'right' as const
-    },
-    {
-      name: `${t('game.common.betTotalAmount')}:`,
-      value: 'betAmount',
-      unit: '$',
-      location: 'left' as const
-    },
-    {
-      name: `${t('game.common.payTotalAmount')}:`,
-      value: 'payAmount',
-      unit: '$',
-      location: 'left' as const
-    },
-    {
-      name: `${t('game.common.rtp')}:`,
-      value: 'rtp',
-      unit: '%',
-      location: 'right' as const
-    },
-    {
-      name: `${t('game.common.winLossTotal')}:`,
-      value: 'winLoss',
-      unit: '$',
-      location: 'left' as const
-    },
-    {
-      name: `${t('game.common.perCapitaBet')}:`,
-      value: 'avgBetAmount',
-      unit: '$',
-      location: 'left' as const
+const DataDetails = computed(() => [
+  { name: `${t('game.info.gameName')}:`, value: 'gameName' },
+  {
+    name: `${t('game.common.totalBets')}:`,
+    value: 'betCount',
+    unit: t('game.records.timesUnit'),
+    location: 'right' as const
+  },
+  {
+    name: `${t('game.common.betTotalAmount')}:`,
+    value: 'betAmount',
+    unit: '$',
+    location: 'left' as const
+  },
+  {
+    name: `${t('game.common.payTotalAmount')}:`,
+    value: 'payAmount',
+    unit: '$',
+    location: 'left' as const
+  },
+  {
+    name: `${t('game.common.rtp')}:`,
+    value: 'rtp',
+    unit: '%',
+    location: 'right' as const
+  },
+  {
+    name: `${t('game.common.winLossTotal')}:`,
+    value: 'winLoss',
+    unit: '$',
+    location: 'left' as const
+  },
+  {
+    name: `${t('game.common.perCapitaBet')}:`,
+    value: 'avgBetAmount',
+    unit: '$',
+    location: 'left' as const
+  }
+])
+const totalData = ref()
+
+const loading = ref(false) // 列表的加载中
+const exportLoading = ref(false) // 导出的加载中
+const total = ref(0) // 列表的总页数
+
+type SearchContext = {
+  days?: string
+  endDays?: string
+  zone?: string
+}
+
+const queryParams = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  userId: undefined as string | undefined
+})
+const selectedGameCode = ref<string | undefined>(undefined)
+const selectedVendorCode = ref<string | undefined>(undefined)
+const selectedTenantId = ref<number | undefined>(undefined)
+const selectedRow = ref<Record<string, unknown>>()
+const listSearchParams = ref<SearchContext>({})
+
+const list = ref([]) // 列表的数据
+
+const buildTotalParams = () => {
+  const params: Record<string, unknown> = {
+    tenantId: selectedTenantId.value,
+    vendorCode: selectedVendorCode.value,
+    gameCode: selectedGameCode.value,
+    ...listSearchParams.value
+  }
+  const userId = queryParams.userId?.trim()
+  if (userId) {
+    params.userId = userId
+  }
+  return params
+}
+
+const getTotal = async () => {
+  try {
+    const data =
+      await TenantDayStaticApi.getUserDayStaticTotal(buildTotalParams())
+    const userCount = Number(data.userCount) || 0
+    const userBetCount = Number(data.userBetCount) || 0
+    const betAmount = Number(data.betAmount) || 0
+    const divisor = userCount > 0 ? userCount : userBetCount
+    totalData.value = {
+      ...data,
+      gameName: selectedRow.value?.gameName,
+      avgBetAmount: divisor > 0 ? (betAmount / divisor).toFixed(2) : '0.00'
     }
-  ])
-  const totalData = ref()
-
-  const loading = ref(false) // 列表的加载中
-  const total = ref(0) // 列表的总页数
-
-  const queryParams = reactive({
-    pageNo: 1,
-    pageSize: 10,
-    name: ''
-  })
-  const selectedGameCode = ref<string | undefined>(undefined)
-  const selectedVendorCode = ref<string | undefined>(undefined)
-
-  const list = ref([]) // 列表的数据
-
-  /** 搜索按钮操作 */
-  const handleQuery = () => {
-    queryParams.pageNo = 1
-    getList()
+  } catch {
+    // 保持当前统计数据展示
   }
+}
 
-  /** 查询列表 */
-  const getList = async () => {
-    loading.value = true
-    try {
-      const data = await GameDataOverviewApi.getrecordsPage({
-        ...queryParams,
-        gameCode: selectedGameCode.value,
-        vendorCode: selectedVendorCode.value
-      })
-      list.value = data.list
-      total.value = data.total
-    } finally {
-      loading.value = false
-    }
+const buildRecordsParams = () => {
+  const params: Record<string, unknown> = {
+    gameCode: selectedGameCode.value,
+    vendorCode: selectedVendorCode.value
   }
+  if (selectedTenantId.value) {
+    params.tenantId = selectedTenantId.value
+  }
+  const userId = queryParams.userId?.trim()
+  if (userId) {
+    params.userId = userId
+  }
+  if (listSearchParams.value.days && listSearchParams.value.endDays) {
+    params.createTime = [
+      `${listSearchParams.value.days} 00:00:00`,
+      `${listSearchParams.value.endDays} 23:59:59`
+    ]
+  }
+  return params
+}
 
-  const getTotal = async (gameCode, vendorCode) => {
-    try {
-      const data = await GameDataOverviewApi.gettenantstaticTotal({
-        gameCode,
-        vendorCode
-      })
-      totalData.value = data
-    } finally {
-    }
-  }
+/** 搜索按钮操作 */
+const handleQuery = () => {
+  queryParams.pageNo = 1
+  getList()
+  getTotal()
+}
 
-  /** 打开弹窗 */
-  const open = async (type: string, gameCode?: string, vendorCode?: string) => {
-    dialogVisible.value = true
-    dialogTitle.value = t('action.' + type)
-    formType.value = type
-    selectedGameCode.value = gameCode
-    selectedVendorCode.value = vendorCode
-    queryParams.pageNo = 1
-    getList()
-    getTotal(gameCode, vendorCode)
+/** 导出按钮操作 */
+const handleExport = async () => {
+  try {
+    await message.exportConfirm()
+    exportLoading.value = true
+    const data = await RecordsApi.exportRecordsList(buildRecordsParams())
+    download.excel(data, t('game.recordsPage.exportFileUserList'))
+  } catch {
+  } finally {
+    exportLoading.value = false
   }
-  defineExpose({ open }) // 提供 open 方法，用于打开弹窗
+}
+
+/** 查询列表 */
+const getList = async () => {
+  loading.value = true
+  try {
+    const data = await GameDataOverviewApi.getrecordsPage({
+      pageNo: queryParams.pageNo,
+      pageSize: queryParams.pageSize,
+      ...buildRecordsParams()
+    })
+    list.value = data.list
+    total.value = data.total
+  } finally {
+    loading.value = false
+  }
+}
+
+/** 打开弹窗 */
+const open = async (
+  type: string,
+  row?: Record<string, unknown>,
+  searchContext: SearchContext = {}
+) => {
+  dialogVisible.value = true
+  dialogTitle.value = t('action.' + type)
+  formType.value = type
+  selectedGameCode.value = row?.gameCode as string | undefined
+  selectedVendorCode.value = row?.vendorCode as string | undefined
+  selectedTenantId.value = row?.tenantId as number | undefined
+  selectedRow.value = row
+  listSearchParams.value = { ...searchContext }
+  queryParams.pageNo = 1
+  queryParams.userId = undefined
+  getTotal()
+  getList()
+}
+defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 </script>
 
 <style lang="scss" scoped>
-  .section {
-    margin-bottom: 20px;
+.section {
+  margin-bottom: 20px;
+}
+
+.overview-item {
+  padding: 20px;
+  margin: 10px 0;
+  background: linear-gradient(135deg, #f8f9fa, #fff);
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px #0000000d;
+  transition: all 0.3s ease;
+}
+
+.overview-item:hover {
+  border-color: #3498db;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px #0000001a;
+}
+
+.overview-item p {
+  display: flex;
+  font-size: 14px;
+  gap: 10px;
+  align-items: center;
+}
+
+.overview-item p span {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.section-title {
+  margin-bottom: 5px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #154ec1;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-title-bet {
+  font-size: 18px;
+  font-weight: 600;
+  color: #154ec1;
+}
+
+.items-center {
+  display: flex;
+  background: #ecf0f1;
+
+  p {
+    padding: 5px 15px;
+    font-size: 16px;
+    cursor: pointer;
   }
 
-  .overview-item {
-    padding: 20px;
-    margin: 10px 0;
-    background: linear-gradient(135deg, #f8f9fa, #fff);
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px #0000000d;
-    transition: all 0.3s ease;
+  .active {
+    background: #dce3e5;
   }
-
-  .overview-item:hover {
-    border-color: #3498db;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px #0000001a;
-  }
-
-  .overview-item p {
-    display: flex;
-    font-size: 14px;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .overview-item p span {
-    font-size: 20px;
-    font-weight: bold;
-  }
-
-  .section-title {
-    margin-bottom: 5px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #154ec1;
-  }
-
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-
-  .section-title-bet {
-    font-size: 18px;
-    font-weight: 600;
-    color: #154ec1;
-  }
-
-  .items-center {
-    display: flex;
-    background: #ecf0f1;
-
-    p {
-      padding: 5px 15px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .active {
-      background: #dce3e5;
-    }
-  }
+}
 </style>

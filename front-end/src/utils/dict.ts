@@ -80,7 +80,10 @@ export const getBoolDictOptions = (dictType: string) => {
  * @param value 字典值
  * @return DictDataType 字典对象
  */
-export const getDictObj = (dictType: string, value: any): DictDataType | undefined => {
+export const getDictObj = (
+  dictType: string,
+  value: any
+): DictDataType | undefined => {
   const dictOptions: DictDataType[] = getDictOptions(dictType)
   for (const dict of dictOptions) {
     if (dict.value === value + '') {
@@ -131,8 +134,8 @@ export enum DICT_TYPE {
   SYSTEM_SOCIAL_TYPE = 'system_social_type',
   SYSTEM_CURRENCY_TYPE = 'system_currency',
   SYSTEM_LANG = 'system_lang',
+  SYSTEM_ZONE = 'system_zone',
   SYSTEM_GAME_RECORD_ACTION = 'system_game_record_action',
-  
 
   // ========== INFRA 模块 ==========
   INFRA_BOOLEAN_STRING = 'infra_boolean_string',

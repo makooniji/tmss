@@ -1,15 +1,15 @@
 import request from '@/config/axios'
-import type { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs'
 
 /** 厂商玩家信息 */
 export interface VendorUser {
-          id: number; // 主键
-          vendorId?: number; // 厂商ID
-          vendorCode?: string; // 厂商编码
-          userId?: number; // 用户ID
-          username?: string; // 用户名
-          status?: number; // 状态
-  }
+  id: number // 主键
+  vendorId?: number // 厂商ID
+  vendorCode?: string // 厂商编码
+  userId?: number // 用户ID
+  username?: string // 用户名
+  status?: number // 状态
+}
 
 // 厂商玩家 API
 export const VendorUserApi = {
@@ -33,6 +33,14 @@ export const VendorUserApi = {
     return await request.put({ url: `/game/vendor-user/update`, data })
   },
 
+  // 修改厂商玩家状态
+  updateVendorUserStatus: async (id: number, status: number) => {
+    return await request.put({
+      url: `/game/vendor-user/update-status`,
+      data: { id, status }
+    })
+  },
+
   // 删除厂商玩家
   deleteVendorUser: async (id: number) => {
     return await request.delete({ url: `/game/vendor-user/delete?id=` + id })
@@ -40,11 +48,16 @@ export const VendorUserApi = {
 
   /** 批量删除厂商玩家 */
   deleteVendorUserList: async (ids: number[]) => {
-    return await request.delete({ url: `/game/vendor-user/delete-list?ids=${ids.join(',')}` })
+    return await request.delete({
+      url: `/game/vendor-user/delete-list?ids=${ids.join(',')}`
+    })
   },
 
   // 导出厂商玩家 Excel
   exportVendorUser: async (params) => {
-    return await request.download({ url: `/game/vendor-user/export-excel`, params })
-  },
-}
+    return await request.download({
+      url: `/game/vendor-user/export-excel`,
+      params
+    })
+  }
+}

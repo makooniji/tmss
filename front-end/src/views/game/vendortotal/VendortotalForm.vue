@@ -14,8 +14,8 @@
           :value="formData?.tenantDO?.status || 0"
         />
       </el-form-item>
-      <el-form-item :label="t('game.common.playerCount')" prop="accountCount">
-        <p>{{ formData?.tenantDO?.accountCount }}</p>
+      <el-form-item :label="t('game.common.playerCount')" prop="userCount">
+        <p>{{ formData?.userCount }}</p>
       </el-form-item>
       <el-form-item :label="t('game.common.openTime')" prop="createTime">
         <p>{{ formatDate(formData?.tenantDO?.createTime) }}</p>
@@ -85,6 +85,11 @@
           align="center"
           prop="username"
         />
+        <!-- <el-table-column
+          :label="t('game.common.playerCount')"
+          align="center"
+          prop="userCount"
+        /> -->
         <el-table-column
           :label="t('game.common.betTotalTimes')"
           align="center"
@@ -133,14 +138,14 @@
     code?: string
     name?: string
     status?: string
-    accountCount?: number
+    userCount?: number
     createTime?: Date
   }
   const formData = ref<{
     tenantCode?: string
     tenantName?: string
     status?: string
-    accountCount?: number
+    userCount?: number
     createTime?: string
     tenantDO?: TenantDO
     [key: string]: unknown
@@ -148,13 +153,13 @@
     tenantCode: undefined,
     tenantName: undefined,
     status: undefined,
-    accountCount: undefined,
+    userCount: undefined,
     createTime: undefined,
     tenantDO: {
       code: undefined,
       name: undefined,
       status: undefined,
-      accountCount: undefined,
+      userCount: undefined,
       createTime: undefined
     }
   })
@@ -173,7 +178,8 @@
   const queryParams = reactive({
     pageNo: 1,
     pageSize: 10,
-    name: ''
+    name: '',
+    tenantId: undefined as number | undefined
   })
 
   const list = ref([])
@@ -195,11 +201,14 @@
     }
   }
 
-  const open = async (type: string, row?: object) => {
+  const open = async (type: string, row?: Record<string, unknown>) => {
     dialogVisible.value = true
     dialogTitle.value = t('action.' + type)
     formType.value = type
-    formData.value = Object.assign({}, row)
+    formData.value = Object.assign({}, row) as typeof formData.value
+    queryParams.tenantId = row?.tenantId as number | undefined
+    queryParams.pageNo = 1
+    queryParams.name = ''
     getList()
   }
   defineExpose({ open })

@@ -7,18 +7,15 @@
       ref="queryFormRef"
       :inline="true"
     >
-      <el-form-item :label="t('common.createTime')" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          :start-placeholder="t('game.common.startDate')"
-          :end-placeholder="t('game.common.endDate')"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
+      <el-form-item :label="t('game.common.merchantCode')" prop="tenantCode">
+        <el-input
+          v-model="queryParams.tenantCode"
+          :placeholder="t('game.common.placeholderMerchantCode')"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
         />
       </el-form-item>
-
       <el-form-item :label="t('game.info.vendorCode')" prop="vendorCode">
         <el-input
           v-model="queryParams.vendorCode"
@@ -27,6 +24,36 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
+      </el-form-item>
+
+      <el-form-item :label="t('game.common.timeRange')" prop="daysArr">
+        <el-date-picker
+          v-model="daysArr"
+          value-format="YYYY-MM-DD"
+          type="datetimerange"
+          :shortcuts="dateRangeShortcuts"
+          :range-separator="t('game.common.rangeSeparator')"
+          :start-placeholder="t('game.common.startTime')"
+          :end-placeholder="t('game.common.endTime')"
+          clearable
+          class="!w-280px"
+        />
+      </el-form-item>
+
+      <el-form-item :label="t('game.common.zoneLabel')" prop="zone">
+        <el-select
+          v-model="queryParams.zone"
+          :placeholder="t('game.common.selectZone')"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.SYSTEM_ZONE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
 
       <el-form-item>
@@ -104,7 +131,9 @@
           <el-button
             link
             type="primary"
-            @click="openForm('detail', scope.row.vendorCode)"
+            @click="
+              openForm('detail', scope.row.vendorCode, scope.row.tenantCode)
+            "
             v-hasPermi="['game:records:update']"
           >
             {{ t('action.detail') }}
@@ -126,14 +155,16 @@
 </template>
 
 <script setup lang="ts">
+  import { useDateRangeShortcuts } from '@/hooks/web/useDateRangeShortcuts'
   import { isEmpty } from '@/utils/is'
+  import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
   import { dateFormatter } from '@/utils/formatTime'
   import download from '@/utils/download'
   import { RecordsApi, Records } from '@/api/game/records'
   import RecordsForm from './RecordsForm.vue'
 
-  /** 用户游戏记录 列表 */
-  defineOptions({ name: 'Records' })
+  /** 玩家数据列表（汇总） */
+  defineOptions({ name: 'RecordsTotal' })
 
   const message = useMessage() // 消息弹窗
   const { t } = useI18n() // 国际化
@@ -141,36 +172,63 @@
   const loading = ref(true) // 列表的加载中
   const list = ref<Records[]>([]) // 列表的数据
   const total = ref(0) // 列表的总页数
+  const daysArr = ref<[string, string] | undefined>()
+  const dateRangeShortcuts = useDateRangeShortcuts()
   const queryParams = reactive({
     pageNo: 1,
     pageSize: 10,
-    userId: undefined,
-    action: undefined,
-    transNo: undefined,
-    balance: undefined,
-    drawId: undefined,
-    orderNo: undefined,
-    roundId: undefined,
-    roomKind: undefined,
-    betAmount: undefined,
-    winAmount: undefined,
-    extraBusiness: undefined,
-    createTime: [],
-    sourceType: undefined,
-    platform: undefined,
-    vendorCode: undefined,
-    gameCode: undefined,
-    gameKind: undefined,
-    betContent: undefined,
-    issueNo: undefined,
-    remark: undefined,
-    odds: undefined
+    days: undefined as string | undefined,
+    endDays: undefined as string | undefined,
+    zone: undefined as string | undefined,
+    tenantCode: undefined as string | undefined,
+    vendorCode: undefined as string | undefined
   })
   const queryFormRef = ref() // 搜索的表单
   const exportLoading = ref(false) // 导出的加载中
 
+  const hasValidDateRange = () =>
+    Array.isArray(daysArr.value) &&
+    daysArr.value.length >= 2 &&
+    daysArr.value[0] &&
+    daysArr.value[1]
+
+  const checkSearchParams = () => {
+    if (queryParams.zone && !hasValidDateRange()) {
+      return false
+    }
+    if (hasValidDateRange() && !queryParams.zone) {
+      return false
+    }
+    return true
+  }
+
+  const validateSearchParams = () => {
+    if (queryParams.zone && !hasValidDateRange()) {
+      message.warning(t('game.common.zoneRequiresDateRange'))
+      return false
+    }
+    if (hasValidDateRange() && !queryParams.zone) {
+      message.warning(t('game.common.dateRequiresZone'))
+      return false
+    }
+    return true
+  }
+
+  watchEffect(() => {
+    if (hasValidDateRange()) {
+      queryParams.days = daysArr.value![0]
+      queryParams.endDays = daysArr.value![1]
+      return
+    }
+    queryParams.days = undefined
+    queryParams.endDays = undefined
+  })
+
   /** 查询列表 */
   const getList = async () => {
+    if (!checkSearchParams()) {
+      return
+    }
     loading.value = true
     try {
       const data = await RecordsApi.getRecordsTotalPage(queryParams)
@@ -183,20 +241,28 @@
 
   /** 搜索按钮操作 */
   const handleQuery = () => {
+    if (!validateSearchParams()) {
+      return
+    }
     queryParams.pageNo = 1
     getList()
   }
 
   /** 重置按钮操作 */
   const resetQuery = () => {
+    daysArr.value = undefined
     queryFormRef.value.resetFields()
     handleQuery()
   }
 
   /** 添加/修改操作 */
   const formRef = ref()
-  const openForm = (type: string, vendorCode?: string) => {
-    formRef.value.open(type, vendorCode)
+  const openForm = (type: string, vendorCode?: string, tenantCode?: string) => {
+    formRef.value.open(type, vendorCode, tenantCode, {
+      days: queryParams.days,
+      endDays: queryParams.endDays,
+      zone: queryParams.zone
+    })
   }
 
   /** 删除按钮操作 */
@@ -231,6 +297,9 @@
 
   /** 导出按钮操作 */
   const handleExport = async () => {
+    if (!validateSearchParams()) {
+      return
+    }
     try {
       // 导出的二次确认
       await message.exportConfirm()

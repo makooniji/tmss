@@ -19,16 +19,30 @@ export const getRefreshToken = () => {
   return wsCache.get(RefreshTokenKey)
 }
 
-// 设置token
+// 设置 token（刷新 token 时仅更新令牌，不改动 tenant-id）
 export const setToken = (token: TokenType) => {
   wsCache.set(RefreshTokenKey, token.refreshToken)
   wsCache.set(AccessTokenKey, token.accessToken)
+}
+
+/** 登录成功后，用接口返回的 tenantId 覆盖本地缓存 */
+export const setLoginTenantId = (tenantId: number) => {
+  wsCache.set(CACHE_KEY.TenantId, tenantId)
+}
+
+/** 登录成功：保存 token + 覆盖 tenant-id */
+export const applyLoginResult = (token: TokenType) => {
+  setToken(token)
+  if (token.tenantId != null) {
+    setLoginTenantId(token.tenantId)
+  }
 }
 
 // 删除token
 export const removeToken = () => {
   wsCache.delete(AccessTokenKey)
   wsCache.delete(RefreshTokenKey)
+  wsCache.delete(CACHE_KEY.TenantId)
 }
 
 /** 格式化token（jwt格式） */
@@ -38,7 +52,6 @@ export const formatToken = (token: string): string => {
 // ========== 账号相关 ==========
 
 export type LoginFormType = {
-  tenantName: string
   username: string
   password: string
   rememberMe: boolean
@@ -63,18 +76,7 @@ export const removeLoginForm = () => {
 
 // ========== 租户相关 ==========
 
+/** 获取登录接口返回并缓存的 tenant-id */
 export const getTenantId = () => {
   return wsCache.get(CACHE_KEY.TenantId)
-}
-
-export const setTenantId = (tenantId: number) => {
-  wsCache.set(CACHE_KEY.TenantId, tenantId)
-}
-
-export const getVisitTenantId = () => {
-  return wsCache.get(CACHE_KEY.VisitTenantId)
-}
-
-export const setVisitTenantId = (visitTenantId: number) => {
-  wsCache.set(CACHE_KEY.VisitTenantId, visitTenantId)
 }

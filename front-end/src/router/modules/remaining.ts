@@ -105,6 +105,28 @@ const remainingRouter: AppRouteRecordRaw[] = [
     ]
   },
   {
+    path: '/system/tenant',
+    component: Layout,
+    name: 'SystemTenantHidden',
+    meta: {
+      hidden: true
+    },
+    children: [
+      {
+        path: 'profile',
+        redirect: '/user/profile?tab=tenantProfile',
+        name: 'SystemTenantProfile',
+        meta: {
+          canTo: true,
+          hidden: true,
+          noTagsView: false,
+          icon: 'ep:user',
+          title: t('system.tenant.profileTitle')
+        }
+      }
+    ]
+  },
+  {
     path: '/dict',
     component: Layout,
     name: 'dict',

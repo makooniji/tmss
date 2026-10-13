@@ -11,6 +11,7 @@
         <el-input
           v-model="formData.vendorCode"
           :placeholder="t('game.common.placeholderVendorCodeGame')"
+          :disabled="formType === 'update'"
         />
       </el-form-item>
       <el-form-item :label="t('game.common.vendorShortName')" prop="vendorName">

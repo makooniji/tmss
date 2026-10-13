@@ -260,15 +260,6 @@
       verify.value.show()
     }
   }
-  //获取租户ID
-  const getTenantId = async () => {
-    if (loginData.tenantEnable) {
-      const res = await LoginApi.getTenantIdByName(
-        loginData.loginForm.tenantName
-      )
-      authUtil.setTenantId(res)
-    }
-  }
   // 记住我
   const getCookie = () => {
     const loginForm = authUtil.getLoginForm()
@@ -281,10 +272,7 @@
         password: loginForm.password
           ? loginForm.password
           : loginData.loginForm.password,
-        rememberMe: loginForm.rememberMe ? true : false,
-        tenantName: loginForm.tenantName
-          ? loginForm.tenantName
-          : loginData.loginForm.tenantName
+        rememberMe: loginForm.rememberMe ? true : false
       }
     }
   }
@@ -305,7 +293,7 @@
       const state = route?.query?.state as string
 
       const res = await LoginApi.socialLogin(type, code, state)
-      authUtil.setToken(res)
+      authUtil.applyLoginResult(res)
 
       router.push({ path: redirect || '/' })
     } catch (err) {}
@@ -315,7 +303,6 @@
   const handleLogin = async (params) => {
     loginLoading.value = true
     try {
-      await getTenantId()
       const data = await validForm()
       if (!data) {
         return
@@ -351,7 +338,7 @@
       } else {
         authUtil.removeLoginForm()
       }
-      authUtil.setToken(res)
+      authUtil.applyLoginResult(res)
       if (!redirect) {
         redirect = '/'
       }

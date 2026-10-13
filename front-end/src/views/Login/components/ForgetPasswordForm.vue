@@ -17,7 +17,10 @@
         </el-form-item>
       </el-col>
       <el-col :span="24" class="px-10px">
-        <el-form-item v-if="resetPasswordData.tenantEnable === 'true'" prop="tenantName">
+        <el-form-item
+          v-if="resetPasswordData.tenantEnable === 'true'"
+          prop="tenantName"
+        >
           <el-input
             v-model="resetPasswordData.tenantName"
             :placeholder="t('login.tenantNamePlaceholder')"
@@ -63,7 +66,11 @@
                   >
                     {{ t('login.getSmsCode') }}
                   </span>
-                  <span v-if="mobileCodeTimer > 0" class="getMobileCode" style="cursor: pointer">
+                  <span
+                    v-if="mobileCodeTimer > 0"
+                    class="getMobileCode"
+                    style="cursor: pointer"
+                  >
                     {{ mobileCodeTimer }}秒后可重新获取
                   </span>
                 </template>
@@ -119,160 +126,163 @@
   </el-form>
 </template>
 <script lang="ts" setup>
-import type { RouteLocationNormalizedLoaded } from 'vue-router'
+  import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
-import { useIcon } from '@/hooks/web/useIcon'
+  import { useIcon } from '@/hooks/web/useIcon'
 
-import { sendSmsCode, smsResetPassword } from '@/api/login'
-import LoginFormTitle from './LoginFormTitle.vue'
-import { LoginStateEnum, useFormValid, useLoginState } from './useLogin'
-import { ElLoading } from 'element-plus'
-import * as authUtil from '@/utils/auth'
-import * as LoginApi from '@/api/login'
-defineOptions({ name: 'ForgetPasswordForm' })
-const verify = ref()
+  import { sendSmsCode, smsResetPassword } from '@/api/login'
+  import LoginFormTitle from './LoginFormTitle.vue'
+  import { LoginStateEnum, useFormValid, useLoginState } from './useLogin'
+  import { ElLoading } from 'element-plus'
+  defineOptions({ name: 'ForgetPasswordForm' })
+  const verify = ref()
 
-const { t } = useI18n()
-const message = useMessage()
-const { currentRoute } = useRouter()
-const formSmsResetPassword = ref()
-const loginLoading = ref(false)
-const iconHouse = useIcon({ icon: 'ep:house' })
-const iconCellphone = useIcon({ icon: 'ep:cellphone' })
-const iconCircleCheck = useIcon({ icon: 'ep:circle-check' })
-const { validForm } = useFormValid(formSmsResetPassword)
-const { handleBackLogin, getLoginState, setLoginState } = useLoginState()
-const getShow = computed(() => unref(getLoginState) === LoginStateEnum.RESET_PASSWORD)
-const captchaType = ref('blockPuzzle') // blockPuzzle 滑块 clickWord 点击文字 pictureWord 文字验证码
+  const { t } = useI18n()
+  const message = useMessage()
+  const { currentRoute } = useRouter()
+  const formSmsResetPassword = ref()
+  const loginLoading = ref(false)
+  const iconHouse = useIcon({ icon: 'ep:house' })
+  const iconCellphone = useIcon({ icon: 'ep:cellphone' })
+  const iconCircleCheck = useIcon({ icon: 'ep:circle-check' })
+  const { validForm } = useFormValid(formSmsResetPassword)
+  const { handleBackLogin, getLoginState, setLoginState } = useLoginState()
+  const getShow = computed(
+    () => unref(getLoginState) === LoginStateEnum.RESET_PASSWORD
+  )
+  const captchaType = ref('blockPuzzle') // blockPuzzle 滑块 clickWord 点击文字 pictureWord 文字验证码
 
-const validatePass2 = (_rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('请再次输入密码'))
-  } else if (value !== resetPasswordData.password) {
-    callback(new Error('两次输入密码不一致!'))
-  } else {
-    callback()
-  }
-}
-
-const rules = {
-  tenantName: [{ required: true, min: 2, max: 20, trigger: 'blur', message: '长度为4到16位' }],
-  mobile: [{ required: true, min: 11, max: 11, trigger: 'blur', message: '手机号长度为11位' }],
-  password: [
-    {
-      required: true,
-      min: 4,
-      max: 16,
-      validator: validatePass2,
-      trigger: 'blur',
-      message: '密码长度为4到16位'
+  const validatePass2 = (_rule, value, callback) => {
+    if (value === '') {
+      callback(new Error('请再次输入密码'))
+    } else if (value !== resetPasswordData.password) {
+      callback(new Error('两次输入密码不一致!'))
+    } else {
+      callback()
     }
-  ],
-  check_password: [{ required: true, validator: validatePass2, trigger: 'blur' }],
-  code: [required]
-}
-
-const resetPasswordData = reactive({
-  captchaEnable: import.meta.env.VITE_APP_CAPTCHA_ENABLE,
-  tenantEnable: import.meta.env.VITE_APP_TENANT_ENABLE,
-  tenantName: '',
-  username: '',
-  password: '',
-  check_password: '',
-  mobile: '',
-  code: ''
-})
-
-const smsVO = reactive({
-  tenantName: '',
-  mobile: '',
-  captchaVerification: '',
-  scene: 23
-})
-const mobileCodeTimer = ref(0)
-const redirect = ref<string>('')
-
-// 获取验证码
-const getCode = async () => {
-  // 情况一，未开启：则直接发送验证码
-  if (resetPasswordData.captchaEnable === 'false') {
-    await getSmsCode({})
-  } else {
-    // 情况二，已开启：则展示验证码；只有完成验证码的情况，才进行发送验证码
-    // 弹出验证码
-    verify.value.show()
   }
-}
 
-const getSmsCode = async (params) => {
-  if (resetPasswordData.tenantEnable === 'true') {
-    await getTenantId()
-  }
-  smsVO.captchaVerification = params.captchaVerification
-  smsVO.mobile = resetPasswordData.mobile
-  await sendSmsCode(smsVO).then(async () => {
-    message.success(t('login.SmsSendMsg'))
-    // 设置倒计时
-    mobileCodeTimer.value = 60
-    let msgTimer = setInterval(() => {
-      mobileCodeTimer.value = mobileCodeTimer.value - 1
-      if (mobileCodeTimer.value <= 0) {
-        clearInterval(msgTimer)
+  const rules = {
+    tenantName: [
+      {
+        required: true,
+        min: 2,
+        max: 20,
+        trigger: 'blur',
+        message: '长度为4到16位'
       }
-    }, 1000)
+    ],
+    mobile: [
+      {
+        required: true,
+        min: 11,
+        max: 11,
+        trigger: 'blur',
+        message: '手机号长度为11位'
+      }
+    ],
+    password: [
+      {
+        required: true,
+        min: 4,
+        max: 16,
+        validator: validatePass2,
+        trigger: 'blur',
+        message: '密码长度为4到16位'
+      }
+    ],
+    check_password: [
+      { required: true, validator: validatePass2, trigger: 'blur' }
+    ],
+    code: [required]
+  }
+
+  const resetPasswordData = reactive({
+    captchaEnable: import.meta.env.VITE_APP_CAPTCHA_ENABLE,
+    tenantEnable: import.meta.env.VITE_APP_TENANT_ENABLE,
+    tenantName: '',
+    username: '',
+    password: '',
+    check_password: '',
+    mobile: '',
+    code: ''
   })
-}
-watch(
-  () => currentRoute.value,
-  (route: RouteLocationNormalizedLoaded) => {
-    redirect.value = route?.query?.redirect as string
-  },
-  {
-    immediate: true
-  }
-)
 
-const getTenantId = async () => {
-  if (resetPasswordData.tenantEnable === 'true') {
-    const res = await LoginApi.getTenantIdByName(resetPasswordData.tenantName)
-    if (res == null) {
-      message.error(t('login.invalidTenantName'))
-      throw t('login.invalidTenantName')
+  const smsVO = reactive({
+    tenantName: '',
+    mobile: '',
+    captchaVerification: '',
+    scene: 23
+  })
+  const mobileCodeTimer = ref(0)
+  const redirect = ref<string>('')
+
+  // 获取验证码
+  const getCode = async () => {
+    // 情况一，未开启：则直接发送验证码
+    if (resetPasswordData.captchaEnable === 'false') {
+      await getSmsCode({})
+    } else {
+      // 情况二，已开启：则展示验证码；只有完成验证码的情况，才进行发送验证码
+      // 弹出验证码
+      verify.value.show()
     }
-    authUtil.setTenantId(res)
   }
-}
 
-// 重置密码
-const resetPassword = async () => {
-  const data = await validForm()
-  if (!data) return
-  await getTenantId()
-  loginLoading.value = true
-  await smsResetPassword(resetPasswordData)
-    .then(async () => {
-      message.success(t('login.resetPasswordSuccess'))
-      setLoginState(LoginStateEnum.LOGIN)
+  const getSmsCode = async (params) => {
+    smsVO.captchaVerification = params.captchaVerification
+    smsVO.mobile = resetPasswordData.mobile
+    await sendSmsCode(smsVO).then(async () => {
+      message.success(t('login.SmsSendMsg'))
+      // 设置倒计时
+      mobileCodeTimer.value = 60
+      let msgTimer = setInterval(() => {
+        mobileCodeTimer.value = mobileCodeTimer.value - 1
+        if (mobileCodeTimer.value <= 0) {
+          clearInterval(msgTimer)
+        }
+      }, 1000)
     })
-    .catch(() => {})
-    .finally(() => {
-      loginLoading.value = false
-      setTimeout(() => {
-        const loadingInstance = ElLoading.service()
-        loadingInstance.close()
-      }, 400)
-    })
-}
+  }
+  watch(
+    () => currentRoute.value,
+    (route: RouteLocationNormalizedLoaded) => {
+      redirect.value = route?.query?.redirect as string
+    },
+    {
+      immediate: true
+    }
+  )
+
+  // 重置密码
+  const resetPassword = async () => {
+    const data = await validForm()
+    if (!data) return
+    loginLoading.value = true
+    await smsResetPassword(resetPasswordData)
+      .then(async () => {
+        message.success(t('login.resetPasswordSuccess'))
+        setLoginState(LoginStateEnum.LOGIN)
+      })
+      .catch(() => {})
+      .finally(() => {
+        loginLoading.value = false
+        setTimeout(() => {
+          const loadingInstance = ElLoading.service()
+          loadingInstance.close()
+        }, 400)
+      })
+  }
 </script>
 
 <style lang="scss" scoped>
-:deep(.anticon) {
-  &:hover {
-    color: var(--el-color-primary) !important;
+  :deep(.anticon) {
+    &:hover {
+      color: var(--el-color-primary) !important;
+    }
   }
-}
 
-.smsbtn {
-  margin-top: 33px;
-}
+  .smsbtn {
+    margin-top: 33px;
+  }
 </style>

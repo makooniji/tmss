@@ -75,7 +75,15 @@
       </div>
     </div>
 
-    <indexList />
+    <RecordsFormDetail
+      ref="detailRef"
+      :vendor-code="currentVendorCode"
+      :tenant-code="currentTenantCode"
+      :list-days="listDays"
+      :list-end-days="listEndDays"
+      :list-zone="listZone"
+      @filter-query="refreshVendorTotal"
+    />
 
     <template #footer>
       <el-button @click="dialogVisible = false">{{
@@ -86,8 +94,7 @@
 </template>
 <script setup lang="ts">
   import { RecordsApi } from '@/api/game/records'
-
-  import indexList from './index.vue'
+  import RecordsFormDetail from './RecordsFormDetail.vue'
 
   /** 用户游戏记录 表单 */
   defineOptions({ name: 'RecordsForm' })
@@ -103,22 +110,64 @@
   const formData = ref() // 统计数据
   /** 与汇总表「厂商编码」列一致，并传给投注明细列表查询 */
   const currentVendorCode = ref('')
+  const currentTenantCode = ref('')
+  /** 列表页带入的日期/时区，与 pageTotal 查询条件一致 */
+  const listDays = ref<string>()
+  const listEndDays = ref<string>()
+  const listZone = ref<string>()
+  const detailRef = ref<InstanceType<typeof RecordsFormDetail>>()
+
+  const refreshVendorTotal = async (params: Record<string, unknown>) => {
+    if (!params.vendorCode) {
+      return
+    }
+    formLoading.value = true
+    try {
+      formData.value = await RecordsApi.vendorTotal(params)
+    } finally {
+      formLoading.value = false
+    }
+  }
+
+  const buildOpenFilterParams = (
+    vendorCode?: string,
+    tenantCode?: string,
+    listFilters?: { days?: string; endDays?: string; zone?: string }
+  ) => ({
+    vendorCode: vendorCode != null ? String(vendorCode) : undefined,
+    tenantCode: tenantCode != null ? String(tenantCode) : undefined,
+    days: listFilters?.days,
+    endDays: listFilters?.endDays,
+    zone: listFilters?.zone
+  })
 
   /** 打开弹窗 */
-  const open = async (type: string, vendorCode?: string) => {
+  const open = async (
+    type: string,
+    vendorCode?: string,
+    tenantCode?: string,
+    listFilters?: { days?: string; endDays?: string; zone?: string }
+  ) => {
     dialogVisible.value = true
     dialogTitle.value = t('action.' + type)
     formType.value = type
     currentVendorCode.value = vendorCode != null ? String(vendorCode) : ''
-    // 修改时，设置数据
-    if (vendorCode) {
-      formLoading.value = true
-      try {
-        formData.value = await RecordsApi.vendorTotal(vendorCode)
-      } finally {
-        formLoading.value = false
-      }
+    currentTenantCode.value = tenantCode != null ? String(tenantCode) : ''
+    listDays.value = listFilters?.days
+    listEndDays.value = listFilters?.endDays
+    listZone.value = listFilters?.zone
+    if (!vendorCode) {
+      formData.value = undefined
+      return
     }
+    await nextTick()
+    if (detailRef.value) {
+      refreshVendorTotal(detailRef.value.buildFilterParams())
+      return
+    }
+    refreshVendorTotal(
+      buildOpenFilterParams(vendorCode, tenantCode, listFilters)
+    )
   }
   defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 </script>

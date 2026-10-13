@@ -4,7 +4,7 @@
 
 ## 请求游戏落地页URL
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/game/url`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/game/url`
 
 游戏运营商将打开一个新窗口，使用提供的游戏URL，以便用户访问游戏。
 
@@ -41,6 +41,7 @@
 | currency<mark style="color:red;">\*</mark> | String | ISO-4217货币代码（例如，USD） |
 | lobbyUrl<mark style="color:red;">\*</mark> | String | 运营商网站URL，以将用户带回游戏大厅。 |
 | ipAddress<mark style="color:red;">\*</mark> | String | 用户所在地的IP地址，可以是IPv4或IPv6格式。 |
+| rtp | Number | 游戏赔率配置（仅支持部分厂商）。 |
 
 <!-- ==================响应成功=================== -->
 
@@ -142,7 +143,7 @@
 
 ## 返回运营商支持的供应商列表
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/game/vendors`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/game/vendors`
 
 #### Headers
 
@@ -192,7 +193,7 @@
 
 ## 返回运营商支持的游戏列表
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/game/list`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/game/list`
 
 #### Headers
 
@@ -258,7 +259,7 @@
 
 ## 终止玩家的游戏会话
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/game/terminate`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/game/terminate`
 
 #### Headers
 

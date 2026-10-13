@@ -9,10 +9,7 @@
         <p>{{ formData?.tenantDO?.name }}</p>
       </el-form-item>
       <el-form-item :label="t('common.status')" prop="status">
-        <dict-tag
-          :type="DICT_TYPE.TENANT_STATUS"
-          :value="formData?.tenantDO?.status || 0"
-        />
+        <dict-tag :type="DICT_TYPE.TENANT_STATUS" :value="formData?.tenantDO?.status || 0" />
       </el-form-item>
       <el-form-item :label="t('game.common.playerCount')" prop="accountCount">
         <p>{{ formData?.tenantDO?.accountCount }}</p>
@@ -27,9 +24,9 @@
       <el-row :gutter="20">
         <el-col :span="6" v-for="(item, index) in DataDetails" :key="index">
           <div class="overview-item">
-            <p
-              >{{ item.name }} <span>{{ formData?.[item.value] || 0 }}</span></p
-            >
+            <p>{{ item.name }}
+              <span>{{ financeData?.[item.value] ?? 0 }}</span>
+            </p>
           </div>
         </el-col>
       </el-row>
@@ -44,19 +41,14 @@
     </div>
 
     <ContentWrap>
-      <el-form
-        class="-mb-15px"
-        :model="queryParams"
-        ref="queryFormRef"
-        :inline="true"
-      >
-        <el-form-item label="" prop="name">
-          <el-input
-            v-model="queryParams.name"
-            :placeholder="t('game.common.placeholderSearchAccount')"
-            clearable
-            class="!w-240px"
-          />
+      <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true">
+        <el-form-item label="" prop="vendorCode">
+          <el-input v-model="queryParams.vendorCode" :placeholder="t('game.vendor.placeholderVendorCode')" clearable
+            class="!w-240px" @keyup.enter="handleQuery" @clear="handleClearSearch" />
+        </el-form-item>
+        <el-form-item label="" prop="username">
+          <el-input v-model="queryParams.username" :placeholder="t('game.common.playerAccount')" clearable
+            class="!w-240px" @keyup.enter="handleQuery" @clear="handleClearSearch" />
         </el-form-item>
         <el-form-item>
           <el-button @click="handleQuery">
@@ -68,45 +60,17 @@
     </ContentWrap>
 
     <ContentWrap>
-      <el-table
-        row-key="id"
-        v-loading="loading"
-        :data="list"
-        :stripe="true"
-        :show-overflow-tooltip="true"
-      >
-        <el-table-column
-          :label="t('game.common.playerId')"
-          align="center"
-          prop="userId"
-        />
-        <el-table-column
-          :label="t('game.common.playerAccount')"
-          align="center"
-          prop="username"
-        />
-        <el-table-column
-          :label="t('game.common.betTotalTimes')"
-          align="center"
-          prop="betCount"
-        />
-        <el-table-column
-          :label="t('game.common.betTotalAmount')"
-          align="center"
-          prop="betCount"
-        />
-        <el-table-column
-          :label="t('game.common.winLossTotal')"
-          align="center"
-          prop="winLoss"
-        />
+      <el-table :row-key="(row) => `${row.vendorCode ?? ''}-${row.username ?? ''}`" v-loading="loading" :data="list"
+        :stripe="true" :show-overflow-tooltip="true">
+        <el-table-column :label="t('game.info.vendorCode')" align="center" prop="vendorCode" />
+        <el-table-column :label="t('game.common.playerAccount')" align="center" prop="username" />
+        <el-table-column :label="t('game.common.betTotalTimes')" align="center" prop="betCount" />
+        <el-table-column :label="t('game.common.betTotalAmount')" align="center" prop="betAmount" />
+        <el-table-column :label="t('game.common.payTotalAmount')" align="center" prop="payAmount" />
+        <el-table-column :label="t('game.common.winLossTotal')" align="center" prop="winLoss" />
       </el-table>
-      <Pagination
-        :total="total"
-        v-model:page="queryParams.pageNo"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-      />
+      <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize"
+        @pagination="getList" />
     </ContentWrap>
 
     <template #footer>
@@ -117,159 +81,228 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-  import { TenantDayStaticApi } from '@/api/game/vendortotal'
-  import { DICT_TYPE } from '@/utils/dict'
-  import { formatDate } from '@/utils/formatTime'
+import { TenantDayStaticApi } from '@/api/game/tenantstatic'
+import { DICT_TYPE } from '@/utils/dict'
+import { formatDate } from '@/utils/formatTime'
 
-  defineOptions({ name: 'TenantStaticDetailForm' })
+defineOptions({ name: 'TenantStaticDetailForm' })
 
-  const { t } = useI18n()
+const { t } = useI18n()
 
-  const dialogVisible = ref(false)
-  const dialogTitle = ref('')
-  const formType = ref('')
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+const formType = ref('')
 
-  interface TenantDO {
-    code?: string
-    name?: string
-    status?: string
-    accountCount?: number
-    createTime?: Date
-  }
-  const formData = ref<{
-    tenantCode?: string
-    tenantName?: string
-    status?: string
-    accountCount?: number
-    createTime?: string
-    tenantDO?: TenantDO
-    [key: string]: unknown
-  }>({
-    tenantCode: undefined,
-    tenantName: undefined,
+interface TenantDO {
+  code?: string
+  name?: string
+  status?: string
+  accountCount?: number
+  createTime?: Date
+}
+const formData = ref<{
+  tenantCode?: string
+  tenantName?: string
+  status?: string
+  accountCount?: number
+  createTime?: string
+  tenantDO?: TenantDO
+  [key: string]: unknown
+}>({
+  tenantCode: undefined,
+  tenantName: undefined,
+  status: undefined,
+  accountCount: undefined,
+  createTime: undefined,
+  tenantDO: {
+    code: undefined,
+    name: undefined,
     status: undefined,
     accountCount: undefined,
-    createTime: undefined,
-    tenantDO: {
-      code: undefined,
-      name: undefined,
-      status: undefined,
-      accountCount: undefined,
-      createTime: undefined
+    createTime: undefined
+  }
+})
+
+const DataDetails = computed(() => [
+  { name: `${t('game.common.betUsers')}:`, value: 'userBetCount' },
+  { name: `${t('game.common.betTotalTimes')}:`, value: 'betCount' },
+  { name: `${t('game.common.betTotalAmount')}:`, value: 'betAmount' },
+  { name: `${t('game.common.payTotalAmount')}:`, value: 'payAmount' },
+  { name: `${t('game.common.profitUsers')}:`, value: 'userWinCount' },
+  { name: `${t('game.common.winLossTotal')}:`, value: 'winLoss' }
+])
+
+const financeData = ref<Record<string, unknown>>({})
+
+const loading = ref(false)
+const total = ref(0)
+
+const queryParams = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  vendorCode: undefined as string | undefined,
+  username: undefined as string | undefined
+})
+const selectedTenantId = ref<number | string | undefined>(undefined)
+const listSearchParams = ref<{
+  days?: string
+  endDays?: string
+  zone?: string
+}>({})
+
+const list = ref([])
+
+const initFinanceDataFromRow = (row?: Record<string, any>) => {
+  financeData.value = {
+    betCount: row?.betCount,
+    userBetCount: row?.userBetCount,
+    betAmount: row?.betAmount,
+    payAmount: row?.payAmount,
+    userWinCount: row?.userWinCount,
+    winLoss: row?.winLoss
+  }
+}
+
+const buildSearchParams = () => {
+  const params: Record<string, any> = {
+    tenantId: selectedTenantId.value,
+    ...listSearchParams.value
+  }
+  const vendorCode = queryParams.vendorCode?.trim()
+  if (vendorCode) {
+    params.vendorCode = vendorCode
+  }
+  const username = queryParams.username?.trim()
+  if (username) {
+    params.username = username
+  }
+  return params
+}
+
+const handleQuery = () => {
+  queryParams.pageNo = 1
+  getList()
+  getTotal()
+}
+
+const handleClearSearch = () => {
+  nextTick(() => handleQuery())
+}
+
+const getTotal = async () => {
+  try {
+    financeData.value =
+      await TenantDayStaticApi.getUserDayStaticTotal(buildSearchParams())
+  } catch {
+    // 保持当前财务数据展示
+  }
+}
+
+const getList = async () => {
+  loading.value = true
+  try {
+    const params: Record<string, any> = {
+      pageNo: queryParams.pageNo,
+      pageSize: queryParams.pageSize,
+      ...buildSearchParams()
     }
-  })
-
-  const DataDetails = computed(() => [
-    { name: `${t('game.common.betUsers')}:`, value: 'userBetCount' },
-    { name: `${t('game.common.betTotalAmount')}:`, value: 'betAmount' },
-    { name: `${t('game.common.payTotalAmount')}:`, value: 'payAmount' },
-    { name: `${t('game.common.profitUsers')}:`, value: 'userWinCount' },
-    { name: `${t('game.common.winLossTotal')}:`, value: 'winLoss' }
-  ])
-
-  const loading = ref(false)
-  const total = ref(0)
-
-  const queryParams = reactive({
-    pageNo: 1,
-    pageSize: 10,
-    name: ''
-  })
-
-  const list = ref([])
-
-  const handleQuery = () => {
-    queryParams.pageNo = 1
-    getList()
+    const data = await TenantDayStaticApi.getUserDayStaticPage(params)
+    list.value = data.list
+    total.value = data.total
+  } finally {
+    loading.value = false
   }
+}
 
-  const getList = async () => {
-    loading.value = true
-    try {
-      const data =
-        await TenantDayStaticApi.getTenantDaypageUserPage(queryParams)
-      list.value = data.list
-      total.value = data.total
-    } finally {
-      loading.value = false
-    }
+const open = async (
+  type: string,
+  row?: Record<string, any>,
+  searchParams?: { days?: string; endDays?: string; zone?: string }
+) => {
+  dialogVisible.value = true
+  dialogTitle.value = t('action.' + type)
+  formType.value = type
+  formData.value = Object.assign({}, row)
+  selectedTenantId.value = row?.tenantId
+  initFinanceDataFromRow(row)
+  listSearchParams.value = {
+    days: searchParams?.days,
+    endDays: searchParams?.endDays,
+    zone: searchParams?.zone
   }
-
-  const open = async (type: string, row?: object) => {
-    dialogVisible.value = true
-    dialogTitle.value = t('action.' + type)
-    formType.value = type
-    formData.value = Object.assign({}, row)
-    getList()
-  }
-  defineExpose({ open })
+  queryParams.pageNo = 1
+  queryParams.vendorCode = undefined
+  queryParams.username = undefined
+  getList()
+}
+defineExpose({ open })
 </script>
 
 <style lang="scss" scoped>
-  .section {
-    margin-bottom: 20px;
+.section {
+  margin-bottom: 20px;
+}
+
+.overview-item {
+  padding: 20px;
+  margin: 10px 0;
+  background: linear-gradient(135deg, #f8f9fa, #fff);
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px #0000000d;
+  transition: all 0.3s ease;
+}
+
+.overview-item:hover {
+  border-color: #3498db;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px #0000001a;
+}
+
+.overview-item p {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.overview-item p span {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.section-title {
+  margin-bottom: 5px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #154ec1;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-title-bet {
+  font-size: 18px;
+  font-weight: 600;
+  color: #154ec1;
+}
+
+.items-center {
+  display: flex;
+  background: #ecf0f1;
+
+  p {
+    padding: 5px 15px;
+    font-size: 16px;
+    cursor: pointer;
   }
 
-  .overview-item {
-    padding: 20px;
-    margin: 10px 0;
-    background: linear-gradient(135deg, #f8f9fa, #fff);
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px #0000000d;
-    transition: all 0.3s ease;
+  .active {
+    background: #dce3e5;
   }
-
-  .overview-item:hover {
-    border-color: #3498db;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px #0000001a;
-  }
-
-  .overview-item p {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    font-size: 14px;
-  }
-
-  .overview-item p span {
-    font-size: 20px;
-    font-weight: bold;
-  }
-
-  .section-title {
-    margin-bottom: 5px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #154ec1;
-  }
-
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-
-  .section-title-bet {
-    font-size: 18px;
-    font-weight: 600;
-    color: #154ec1;
-  }
-
-  .items-center {
-    display: flex;
-    background: #ecf0f1;
-
-    p {
-      padding: 5px 15px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .active {
-      background: #dce3e5;
-    }
-  }
+}
 </style>

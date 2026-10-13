@@ -53,10 +53,5 @@ export const CategoryApi = {
       url: `/game/category/export-excel`,
       params
     })
-  },
-
-  // 查询厂商编码
-  getVendorCodePage: async (params: any) => {
-    return await request.get({ url: `/game/vendor-tenant/page`, params })
   }
 }

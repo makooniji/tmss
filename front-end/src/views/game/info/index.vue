@@ -57,13 +57,34 @@
         </el-select>
       </el-form-item>
       <el-form-item :label="t('game.info.maintain')" prop="maintain">
-        <el-input
+        <el-select
           v-model="queryParams.maintain"
-          :placeholder="t('game.info.placeholderMaintain')"
+          :placeholder="t('game.common.selectStatus')"
           clearable
-          @keyup.enter="handleQuery"
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in maintainOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item :label="t('game.info.status')" prop="status">
+        <el-select
+          v-model="queryParams.status"
+          :placeholder="t('game.common.selectStatus')"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.COMMON_STATUS)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item :label="t('common.createTime')" prop="createTime">
         <el-date-picker
@@ -76,7 +97,7 @@
           class="!w-220px"
         />
       </el-form-item>
-      <el-form-item>
+      <el-form-item class="w-full">
         <el-button @click="handleQuery">
           <Icon icon="ep:search" class="mr-5px" /> {{ t('game.common.search') }}
         </el-button>
@@ -192,6 +213,7 @@
         prop="sort"
       />
       <el-table-column
+        v-if="isSuperAdmin"
         :label="t('game.info.maintain')"
         align="center"
         prop="maintain"
@@ -201,12 +223,13 @@
             v-model="scope.row.maintain"
             :active-value="1"
             :inactive-value="0"
-            @change="handleStatusChange(scope.row)"
+            @change="handleMaintainChange(scope.row)"
           />
         </template>
       </el-table-column>
 
-          <el-table-column
+      <el-table-column
+        v-if="isSuperAdmin"
         :label="t('game.info.status')"
         align="center"
         prop="status"
@@ -234,6 +257,7 @@
         prop="onlineCount"
       />
       <el-table-column
+        v-if="isSuperAdmin"
         :label="t('table.action')"
         align="center"
         min-width="120px"
@@ -277,18 +301,27 @@
 </template>
 
 <script setup lang="ts">
+  import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
   import { isEmpty } from '@/utils/is'
   import { dateFormatter } from '@/utils/formatTime'
   import download from '@/utils/download'
   import { InfoApi, Info } from '@/api/game/info'
   import { CategoryApi } from '@/api/game/category'
+  import { VendorTenantApi } from '@/api/game/vendortenant'
   import InfoForm from './InfoForm.vue'
+  import { useUserStore } from '@/store/modules/user'
 
   /** 游戏信息 列表 */
   defineOptions({ name: 'Info' })
 
   const message = useMessage() // 消息弹窗
   const { t } = useI18n() // 国际化
+  const userStore = useUserStore()
+
+  /** 是否超级管理员 */
+  const isSuperAdmin = computed(() =>
+    userStore.getRoles.includes('super_admin')
+  )
 
   const loading = ref(true) // 列表的加载中
   const list = ref<Info[]>([]) // 列表的数据
@@ -301,8 +334,14 @@
     gameCode: undefined,
     cateId: undefined,
     maintain: undefined,
+    status: undefined,
     createTime: []
   })
+
+  const maintainOptions = [
+    { label: '开启', value: 1 },
+    { label: '关闭', value: 0 }
+  ]
   const queryFormRef = ref() // 搜索的表单
   const exportLoading = ref(false) // 导出的加载中
 
@@ -350,11 +389,21 @@
     handleQuery()
   }
 
-  // 处理状态变化的方法
-  const handleStatusChange = async (row) => {
+  const handleMaintainChange = async (row: Info) => {
     try {
       await InfoApi.updateInfo(row)
-    } finally {
+      message.success(t('common.updateSuccess'))
+    } catch {
+      row.maintain = row.maintain === 1 ? 0 : 1
+    }
+  }
+
+  const handleStatusChange = async (row: Info) => {
+    try {
+      await InfoApi.updateInfo(row)
+      message.success(t('common.updateSuccess'))
+    } catch {
+      row.status = row.status === 0 ? 1 : 0
     }
   }
 
@@ -422,14 +471,14 @@
     }
   }
 
-  /** 获取厂商编码分类 */
+  /** 获取厂商编码 */
   const getVendorCodeList = async () => {
     const queryParams = reactive({
       pageNo: 1,
       pageSize: 200
     })
     try {
-      const data = await CategoryApi.getVendorCodePage(queryParams)
+      const data = await VendorTenantApi.getTenantVendorPage(queryParams)
       vendorCodeList.value = data.list
     } finally {
     }

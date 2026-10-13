@@ -4,7 +4,7 @@
 
 ## Returns the list of transactions by a specific time period.
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/transaction/list`&#x20;
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/transaction/list`&#x20;
 
 The game operator can retrieve a list of transaction history by searching based on the transaction settlement time.
 
@@ -41,55 +41,33 @@ The game operator can retrieve a list of transaction history by searching based 
 
 ```javascript
 {
-    "traceId": "04cb48ce-346f-4dcc-ae49-7955805c50fc",
+    "traceId": "string",
     "status": "OK",
-    "message": "Successful response.",
+    "message": "string",
     "data": {
-        "headers": {
-            "betId": 0,
-            "roundId": 1,
-            "externalTransactionId": 2,
-            "username": 3,
-            "currencyCode": 4,
-            "gameCode": 5,
-            "vendorCode": 6,
-            "gameCategoryCode": 7,
-            "betAmount": 8,
-            "winAmount": 9,
-            "winLoss": 10,
-            "effectiveTurnover": 11,
-            "jackpotAmount": 12,
-            "status": 13,
-            "vendorBetTime": 14,
-            "vendorSettleTime": 15,
-            "isFreeSpin": 16,
-            "vendorBetId": 17
-        },
-        "transactions": [
-            [
-                "3358049710",
-                "8865512900",
-                "8865512900",
-                "alex50",
-                "CNY",
-                "PP_vs7monkeys",
-                "PP",
-                "SLOTS",
-                5.6000,
-                11.0000,
-                5.4000,
-                5.6000,
-                0.0000,
-                2,
-                1681467405636,
-                1681467405862,
-                "TRUE",
-                "8865512900"          
-            ]
-        ],
-        "currentPage": 1,
-        "totalItems": 0,
-        "totalPages": 0
+        "currentPage": 0,
+        "totalCount": {},
+        "total": 0,
+        "list": [
+            {
+                "betId": "string",
+                "roundId": "string",
+                "externalTransactionId": "string",
+                "username": "string",
+                "gameCode": "string",
+                "currencyCode": "string",
+                "vendorCode": "string",
+                "betContent": "string",
+                "betAmount": 0,
+                "winAmount": 0,
+                "winLoss": 0,
+                "effectiveTurnover": 0,
+                "jackpotAmount": 0,
+                "status": 0,
+                "vendorBetTime": 0,
+                "vendorSettleTime": 0
+            }
+        ]
     }
 }
 ```
@@ -99,7 +77,7 @@ The game operator can retrieve a list of transaction history by searching based 
 
 ## Retrieve Detailed Transaction Info for a Specific Bet Transaction&#x20;
 
-<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/v2/transaction/detail`
+<mark style="color:green;">`POST`</mark> `https://<WooApi_site>/gateway/transaction/detail`
 
 This API allows the game operator to retrieve a single transaction's detailed history by searching with the `betId` and specifying a time range using the `fromTime` and `toTime` parameters (both in UNIX Timestamp format).
 
@@ -138,31 +116,26 @@ The time range between `fromTime` and `toTime` must be within 7 days. If the ran
 
 ```json
 {
-    "traceId": "6caee2f4-f636-449d-be67-e81d63394dd0",
+    "traceId": "string",
     "status": "OK",
-    "message": "Successful response.",
+    "message": "string",
     "data": {
-        "detailUrl": "https://public.pg-redirect.net/history/redirect.html?trace_id=64591026-ec82-4b76-9cca-958bfce047d3&t=7D1DE1DD-883F-44BA-8003-5312F15024CF&psid=1646444472307331072&sid=1646444515999514624&lang=zh&type=operator",
-        "betDetail": {
-            "betId": "1646444515999514624",
-            "externalTransactionId": "1646444515999514624",
-            "roundId": "1646444472307331072",
-            "username": "dfasdfgasdfasdf",
-            "currencyCode": "CNY",
-            "gameCode": "PGS_100",
-            "vendorCode": "PGS",
-            "gameCategoryCode": "SLOTS",
-            "betAmount": 1010.0000,
-            "winAmount": 0.0000,
-            "winLoss": -1010.0000,
-            "effectiveTurnover": 1010.0000,
-            "jackpotAmount": 0.0000,
-            "refundAmount": 0.0000,
-            "status": 2,
-            "isFreeSpin": "TRUE",
-            "vendorBetTime": 1672985880016,
-            "vendorSettleTime": 1672985880016
-        }
+        "betId": "string",
+        "roundId": "string",
+        "externalTransactionId": "string",
+        "username": "string",
+        "gameCode": "string",
+        "currencyCode": "string",
+        "vendorCode": "string",
+        "betContent": "string",
+        "betAmount": 0,
+        "winAmount": 0,
+        "winLoss": 0,
+        "effectiveTurnover": 0,
+        "jackpotAmount": 0,
+        "status": 0,
+        "vendorBetTime": 0,
+        "vendorSettleTime": 0
     }
 }
 ```

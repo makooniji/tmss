@@ -34,10 +34,10 @@
         ref="queryFormRef"
         :inline="true"
       >
-        <el-form-item label="" prop="name">
+        <el-form-item label="" prop="userId">
           <el-input
-            v-model="queryParams.name"
-            :placeholder="t('game.common.placeholderSearchAccount')"
+            v-model="queryParams.userId"
+            :placeholder="t('game.common.playerId')"
             clearable
             class="!w-240px"
           />
@@ -196,8 +196,11 @@
   const queryParams = reactive({
     pageNo: 1,
     pageSize: 10,
-    name: ''
+    userId: undefined as string | undefined
   })
+  const selectedTenantId = ref<number | string | undefined>(undefined)
+  const selectedVendorCode = ref<string | undefined>(undefined)
+  const selectedGameCode = ref<string | undefined>(undefined)
 
   const list = ref([]) // 列表的数据
 
@@ -211,7 +214,20 @@
   const getList = async () => {
     loading.value = true
     try {
-      const data = await GameDataOverviewApi.getrecordsPage(queryParams)
+      const params: Record<string, any> = {
+        pageNo: queryParams.pageNo,
+        pageSize: queryParams.pageSize,
+        tenantId: selectedTenantId.value,
+        vendorCode: selectedVendorCode.value,
+        gameCode: selectedGameCode.value
+      }
+      const userId = queryParams.userId?.trim()
+      if (userId) {
+        params.userId = userId
+      }
+      const data = await GameDataOverviewApi.getrecordsPage({
+        ...params
+      })
       list.value = data.list
       total.value = data.total
     } finally {
@@ -219,26 +235,49 @@
     }
   }
 
-  const getTotal = async (gameCode) => {
+  const getTotal = async (
+    tenantId?: number | string,
+    vendorCode?: string,
+    gameCode?: string
+  ) => {
     try {
-      const data = await GameDataOverviewApi.gettenantstaticTotal({ gameCode })
+      const data = await GameDataOverviewApi.gettenantstaticTotal({
+        tenantId,
+        vendorCode,
+        gameCode
+      })
       totalData.value = data
     } finally {
     }
   }
 
   /** 打开弹窗 */
-  const open = async (type: string, gameCode?: string) => {
+  const open = async (
+    type: string,
+    tenantId?: number | string,
+    vendorCode?: string,
+    gameCode?: string
+  ) => {
     dialogVisible.value = true
     dialogTitle.value = t('action.' + type)
     formType.value = type
+    selectedTenantId.value = tenantId
+    selectedVendorCode.value = vendorCode
+    selectedGameCode.value = gameCode
+    queryParams.pageNo = 1
+    queryParams.userId = undefined
     getList()
-    getTotal(gameCode)
+    getTotal(tenantId, vendorCode, gameCode)
   }
   defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 </script>
 
 <style lang="scss" scoped>
+  :deep(.el-table .el-table__cell) {
+    user-select: text;
+    user-select: text;
+  }
+
   .section {
     margin-bottom: 20px;
   }
