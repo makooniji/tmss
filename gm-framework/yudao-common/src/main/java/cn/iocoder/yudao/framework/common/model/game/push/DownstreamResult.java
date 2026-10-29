@@ -5,6 +5,7 @@ import cn.iocoder.yudao.framework.common.enums.PlatformCodeEnum;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 /**
  * 下游下发结果模型
@@ -18,6 +19,8 @@ public class DownstreamResult {
         private String currency;
         private BigDecimal balance;
         private Long timestamp;
+        private Map<String,Object> otherData;
+
     }
     private String traceId;
 

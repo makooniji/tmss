@@ -47,12 +47,12 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:mysql://172.31.110.113:30852/game_manager?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
+          url: jdbc:mysql://172.31.110.113:30029/game_manager?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
           username: game_manager
           password: manager&fhg..
         slave: # 模拟从库，可根据自己需要修改 # 模拟从库，可根据自己需要修改
           lazy: true # 开启懒加载，保证启动速度
-          url: jdbc:mysql://172.31.110.113:30852/game_manager?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
+          url: jdbc:mysql://172.31.110.113:30029/game_manager?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true # MySQL Connector/J 8.X 连接的示例
           username: game_manager
           password: manager&fhg..
 
@@ -204,3 +204,6 @@ mybatis-plus:
   configuration:
     # 这里的 log-impl 指定为 StdOutImpl，SQL 会直接打印在控制台
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+merchant:
+  domain: https://api-merchant-dev.iaming-fun.com

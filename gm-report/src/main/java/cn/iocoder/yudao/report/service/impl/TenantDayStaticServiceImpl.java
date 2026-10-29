@@ -144,6 +144,13 @@ public class TenantDayStaticServiceImpl implements TenantDayStaticService {
     }
 
     @Override
+    public List<VendorDayStaticRespVO> getVendorStatic(TenantDayStaticPageReqVO reqVO) {
+        LambdaQueryWrapperX<TenantDayStaticDO> queryWrapperX = buildVendorStaticQueryWrapper(reqVO);
+
+        return tenantDayStaticMapper.selectVendorStatic( queryWrapperX);
+    }
+
+    @Override
     public PageResult<VendorTenantDayStaticRespVO> getVendorTenantStaticPage(TenantDayStaticPageReqVO reqVO) {
         IPage<TenantDayStaticDO> mpPage = MyBatisUtils.buildPage(reqVO, null);
         LambdaQueryWrapperX<TenantDayStaticDO> queryWrapperX = buildVendorStaticQueryWrapper(reqVO);
@@ -499,10 +506,11 @@ public class TenantDayStaticServiceImpl implements TenantDayStaticService {
                 .le("a.days", DateUtil.endOfWeek( DateUtil.date()))
                 .eq("a.currency", CurrencyContextHolder.getCurrency())
                 .eq(tid!=null,"c.tid",tid);
-
-        result.setTotal(tenantDayStaticMapper.selectSupportMerchantTotal(Wrappers.emptyWrapper()
+        QueryWrapper<Object> total = new QueryWrapper<>()
                 .eq("a.currency", CurrencyContextHolder.getCurrency())
-                .eq(tid!=null,"c.tid",tid)));
+                .eq(tid != null, "c.tid", tid);
+
+        result.setTotal(tenantDayStaticMapper.selectSupportMerchantTotal(total));
 
         result.setPrevWeek(tenantDayStaticMapper.selectSupportMerchantTotal(lastWeekQ));
         result.setThisWeek(tenantDayStaticMapper.selectSupportMerchantTotal(thisWeekQ));

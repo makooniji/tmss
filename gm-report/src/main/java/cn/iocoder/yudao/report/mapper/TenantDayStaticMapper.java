@@ -341,6 +341,38 @@ public interface TenantDayStaticMapper extends BaseMapperX<TenantDayStaticDO> {
         """)
     IPage<VendorDayStaticRespVO> selectVendorStaticPage(IPage<?> page, @Param("ew") Wrapper<TenantDayStaticDO> wrapper);
 
+
+    @Select("""
+    SELECT
+        t.currency AS currency,
+        t.vendor_code AS vendor_code,
+        MAX(t.vendor_name) AS vendor_name,
+        SUM(t.total_bet_count) AS betCount,
+        SUM(t.total_bet_amount) AS betAmount,
+        SUM(t.total_pay_amount) AS payAmount,
+        COUNT(t.username) AS userCount,
+        COUNT(CASE WHEN t.total_bet_amount > 0 THEN t.username END) AS userBetCount,
+        COUNT(CASE WHEN t.total_win_loss > 0 THEN t.username END) AS userWinCount,
+        IFNULL(SUM(t.total_pay_amount) / NULLIF(SUM(t.total_bet_amount), 0), 0) AS rtp,
+        SUM(t.total_win_loss) AS winLoss
+    FROM (
+        SELECT
+            currency,
+            vendor_code,
+            MAX(vendor_name) AS vendor_name,
+            username,
+            SUM(bet_count) AS total_bet_count,
+            SUM(bet_amount) AS total_bet_amount,
+            SUM(pay_amount) AS total_pay_amount,
+            SUM(win_loss) AS total_win_loss
+        FROM game_user_day_static
+        ${ew.getCustomSqlSegment}
+        GROUP BY currency, vendor_code, username
+    ) t
+    GROUP BY t.currency, t.vendor_code
+    """)
+    List<VendorDayStaticRespVO> selectVendorStatic(@Param("ew") Wrapper<TenantDayStaticDO> wrapper);
+
     /**
      * 查询厂商 + 商户维度报表分页（包含子查询优化的双层写法）
      */

@@ -74,5 +74,7 @@ public class SportContext {
 
     private DownstreamResult dsResult;
 
+    private Map<String,Object> otherData;
+
 
 }

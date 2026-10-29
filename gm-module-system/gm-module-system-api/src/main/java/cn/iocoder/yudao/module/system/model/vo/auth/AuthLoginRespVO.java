@@ -32,4 +32,7 @@ public class AuthLoginRespVO {
      */
     private Long tenantId;
 
+    private String tenantCode;
+    private String icon;
+
 }

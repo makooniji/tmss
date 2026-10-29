@@ -63,7 +63,10 @@ public class DGAdapter extends BaseAdapter {
         JSONObject data = new JSONObject();
 
         data.put("Balance", sportContext.getBalance().multiply(BigDecimal.valueOf(sportContext.getCurrencyRate())));
-
+        Map<String, Object> otherData = sportContext.getOtherData();
+        if(otherData!=null){
+            data.putAll(otherData);
+        }
 
         return PlatformResponse.success(PGResponse.success(data));
     }
@@ -384,7 +387,7 @@ public class DGAdapter extends BaseAdapter {
         params.put("GameID", request.getGameCode());
         params.put("Language", LanguageEnum.findByCode(request.getLanguage()).getShortCode());
         if (request.getRtp() != null) {
-            params.put("RTP", request.getRtp().setScale(2, RoundingMode.DOWN));
+            params.put("customRtp", request.getRtp().setScale(2, RoundingMode.DOWN));
         }
 
         String sign = this.buildSign(params, appSecret);

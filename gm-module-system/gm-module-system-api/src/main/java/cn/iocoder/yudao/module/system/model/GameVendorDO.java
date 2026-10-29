@@ -68,6 +68,9 @@ public class GameVendorDO extends BaseDO {
     @TableField(typeHandler = StringListTypeHandler.class)
     private List<String> supportLang;
 
+    @TableField(typeHandler = StringListTypeHandler.class)
+    private List<String> ipAddress;
+
     /**
      * 状态
      */

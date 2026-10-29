@@ -191,3 +191,6 @@ aj.captcha.enable: false
 justauth:
   enabled: false
 debug: true
+
+merchant:
+  domain: https://api-merchant-dev.iaming-fun.com

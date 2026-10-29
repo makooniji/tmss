@@ -68,9 +68,6 @@ public class TenantStatExecutor {
         for (GameStaticDTO msg : messages) {
             try {
                 SystemMessageFlowDo flow = StaticConvert.INSTANCE.toMessageFLow(msg);
-                // 存储原始 DTO 镜像 JSON
-                flow.setContent(JsonUtils.toJsonString(msg));
-
                 flowMapper.insert(flow);
 
                 // 插入成功，说明是第一次消费

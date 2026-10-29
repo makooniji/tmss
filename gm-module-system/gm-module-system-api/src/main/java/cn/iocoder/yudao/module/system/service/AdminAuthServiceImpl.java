@@ -1,8 +1,14 @@
 package cn.iocoder.yudao.module.system.service;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.http.HttpUtil;
 import cn.iocoder.yudao.framework.common.enums.CommonStatusEnum;
+import cn.iocoder.yudao.framework.common.enums.PlatformCodeEnum;
 import cn.iocoder.yudao.framework.common.enums.UserTypeEnum;
+import cn.iocoder.yudao.framework.common.exception.GameException;
+import cn.iocoder.yudao.framework.common.exception.ServerException;
+import cn.iocoder.yudao.framework.common.exception.ServiceException;
+import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.monitor.TracerUtils;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.common.util.servlet.ServletUtils;
@@ -20,6 +26,7 @@ import cn.iocoder.yudao.framework.log.enums.LoginLogTypeEnum;
 import cn.iocoder.yudao.framework.log.enums.LoginResultEnum;
 import cn.iocoder.yudao.module.system.enums.oauth2.OAuth2ClientConstants;
 import cn.iocoder.yudao.module.system.enums.sms.SmsSceneEnum;
+import cn.iocoder.yudao.module.system.model.tenant.TenantDO;
 import cn.iocoder.yudao.module.system.model.vo.auth.*;
 import cn.iocoder.yudao.framework.log.service.LoginLogService;
 import cn.iocoder.yudao.module.system.service.member.MemberService;
@@ -31,6 +38,7 @@ import cn.iocoder.yudao.module.system.service.oauth2.OAuth2TokenService;
 
 import cn.iocoder.yudao.module.system.sms.SmsCodeApi;
 import cn.iocoder.yudao.module.system.sms.dto.code.SmsCodeUseReqDTO;
+import com.alibaba.fastjson.JSONObject;
 import com.anji.captcha.model.common.ResponseModel;
 import com.anji.captcha.model.vo.CaptchaVO;
 import com.anji.captcha.service.CaptchaService;
@@ -43,6 +51,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
@@ -74,6 +84,8 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     private CaptchaService captchaService;
     @Resource
     private SmsCodeApi smsCodeApi;
+    @Resource
+    private TenantService tenantService;
 
     /**
      * 验证码的开关，默认为 true
@@ -81,6 +93,9 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     @Value("${yudao.captcha.enable:true}")
     @Setter // 为了单测：开启或者关闭验证码
     private Boolean captchaEnable;
+
+    @Value("${merchant.domain}")
+    private String merchantDomain;
 
     @Override
     public AdminUserDO authenticate(String username, String password) {
@@ -117,8 +132,30 @@ public class AdminAuthServiceImpl implements AdminAuthService {
             socialUserService.bindSocialUser(new SocialUserBindReqDTO(user.getId(), getUserType().getValue(),
                     reqVO.getSocialType(), reqVO.getSocialCode(), reqVO.getSocialState()));
         }
+        TenantDO tenant = tenantService.getTenant(user.getTenantId());
+        if (ObjectUtil.isEmpty(tenant)) {
+            throw  exception(PlatformCodeEnum.TENANT_ERROR.getMessage());
+        }
+        if (CommonStatusEnum.isDisable(tenant.getStatus())) {
+            throw  exception(PlatformCodeEnum.TENANT_DISABLED.getMessage());
+        }
+        if(CommonStatusEnum.isDisable( tenant.getOperateStatus())){
+            throw  exception(PlatformCodeEnum.TENANT_DISABLED_OPERATE.getMessage());
+        }
+
+
         // 创建 Token 令牌，记录登录日志
-        return createTokenAfterLoginSuccess(user.getId(), reqVO.getUsername(), LoginLogTypeEnum.LOGIN_USERNAME, user.getTenantId());
+        AuthLoginRespVO tokenAfterLoginSuccess = createTokenAfterLoginSuccess(user.getId(), reqVO.getUsername(), LoginLogTypeEnum.LOGIN_USERNAME, tenant.getId());
+        tokenAfterLoginSuccess.setTenantCode(tenant.getCode());
+        String path= merchantDomain+"/api/client/tenant/get-browser-icon";
+        Map<String,Object> map = new HashMap<>();
+        map.put("code",tenant.getCode());
+        String body = HttpUtil.get(path,map);
+        JSONObject s = JSONObject.parseObject(body);
+        String data = s.getString("data");
+        tokenAfterLoginSuccess.setIcon(data);
+
+        return tokenAfterLoginSuccess;
     }
 
     @Override

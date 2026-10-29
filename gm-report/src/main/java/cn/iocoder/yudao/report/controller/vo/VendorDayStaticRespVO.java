@@ -39,4 +39,6 @@ public class VendorDayStaticRespVO {
     @Schema(description = "输赢金额")
     private BigDecimal winLoss;
 
+    private String currency;
+
 }

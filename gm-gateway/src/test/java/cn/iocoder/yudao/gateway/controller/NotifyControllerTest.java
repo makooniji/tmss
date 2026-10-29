@@ -81,10 +81,10 @@ public class NotifyControllerTest {
 
     @Test
     public void sportsNotify() {
-        String body="{\"key\":\"vqnztotn0d\",\"message\":{\"action\":\"Settle\",\"txns\":[{\"userId\":\"IG001BB98_devpa10510\",\"refId\":\"4501400_6495264_M\",\"txId\":322023095992277,\"updateTime\":\"2026-04-09T01:05:18.214-04:00\",\"winlostDate\":\"2026-04-09T00:00:00.000-04:00\",\"status\":\"half lose\",\"payout\":4.75,\"creditAmount\":4.75,\"debitAmount\":0.0,\"extraStatus\":\"\",\"settlementTime\":\"2026-04-09T01:05:18.214\"}],\"operationId\":\"4501400_4_4313178_M\"}}";
+        String body="{\"key\":\"m78d9zpkiv\",\"message\":{\"action\":\"PlaceBet\",\"operationId\":\"4501400_1_1925_U\",\"userId\":\"brltest_adpss9876501134\",\"currency\":20,\"matchId\":136793908,\"homeId\":676007,\"awayId\":676014,\"homeName\":\"AS Monaco (V) (PEN)\",\"awayName\":\"Real Sociedad (V) (PEN)\",\"kickOffTime\":\"2026-10-27T04:24:00.000-04:00\",\"betTime\":\"2026-10-27T04:27:17.673-04:00\",\"betAmount\":15.0,\"actualAmount\":15.0,\"sportType\":1,\"sportTypeName\":\"Soccer\",\"betType\":1,\"betTypeName\":\"Handicap\",\"oddsType\":1,\"oddsId\":1092057585,\"odds\":0.9,\"betChoice\":\"AS Monaco (V) (PEN)\",\"betChoice_en\":\"AS Monaco (V) (PEN)\",\"updateTime\":\"2026-10-27T04:27:17.673-04:00\",\"leagueId\":167972,\"leagueName\":\"SABA CLUB FRIENDLY Virtual PES 23 - PENALTY SHOOTOUTS\",\"leagueName_en\":\"SABA CLUB FRIENDLY Virtual PES 23 - PENALTY SHOOTOUTS\",\"sportTypeName_en\":\"Soccer\",\"betTypeName_en\":\"Handicap\",\"homeName_en\":\"AS Monaco (V) (PEN)\",\"awayName_en\":\"Real Sociedad (V) (PEN)\",\"IP\":\"175.136.215.138\",\"isLive\":true,\"refId\":\"4501400_705_U\",\"tsId\":\"\",\"point\":\"0.00\",\"point2\":\"\",\"betTeam\":\"h\",\"homeScore\":0,\"awayScore\":0,\"baStatus\":false,\"excluding\":\"\",\"betFrom\":\"x\",\"creditAmount\":0.0,\"debitAmount\":15.0,\"oddsInfo\":\"\",\"matchDateTime\":\"2026-10-27T04:25:00.000-04:00\",\"betRemark\":\"\",\"gameGroup\":\"Saba virtual sports\"}}";
 
        String vendorCode = "SABA";
-        String action="/Settle";
+        String action="/placebet";
         Map parse = JsonUtils.parseObject(body, Map.class);
 
         Map<String, Object> msgMap = Convert.toMap(String.class, Object.class, parse.getOrDefault("message", new HashMap<>()));

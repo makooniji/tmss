@@ -120,6 +120,7 @@ public class DSManager {
             if (ObjectUtil.isNotEmpty(downstreamResult.getData())) {
                 DownstreamResult.BaseData data = downstreamResult.getData().setUsername(username);
                 context.setBalance(data.getBalance());
+                context.setOtherData(data.getOtherData());
             }
             buildAccessLog(context);
             return downstreamResult;

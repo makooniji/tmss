@@ -69,6 +69,8 @@ public interface TenantDayStaticService {
      */
     PageResult<VendorDayStaticRespVO> getVendorStaticPage(TenantDayStaticPageReqVO pageReqVO);
 
+    List<VendorDayStaticRespVO> getVendorStatic(TenantDayStaticPageReqVO pageReqVO);
+
     /**
      * 获得厂商 + 商户维度报表分页（筛选条件与厂商分页一致）
      *

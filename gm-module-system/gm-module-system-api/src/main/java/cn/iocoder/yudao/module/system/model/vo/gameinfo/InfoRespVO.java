@@ -4,6 +4,7 @@ import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
 import cn.idev.excel.annotation.ExcelProperty;
 import cn.iocoder.yudao.framework.excel.core.annotations.DictFormat;
 import cn.iocoder.yudao.framework.excel.core.convert.DictConvert;
+import cn.iocoder.yudao.framework.excel.core.convert.StringListConverter;
 import cn.iocoder.yudao.framework.log.enums.DictTypeConstants;
 import cn.iocoder.yudao.module.system.model.CategoryDO;
 import cn.iocoder.yudao.module.system.model.CategorySubDO;
@@ -24,62 +25,63 @@ import java.util.Map;
 public class InfoRespVO implements TransPojo {
 
     @Schema(description = "ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "25152")
-    @ExcelProperty("ID")
+    @ExcelProperty("${InfoRespVO_id}")
     private Integer id;
 
     @Schema(description = "厂商编码")
-    @ExcelProperty("厂商编码")
+    @ExcelProperty("${InfoRespVO_vendor_code}")
     private String vendorCode;
 
     @Schema(description = "游戏名称", example = "李四")
-    @ExcelProperty("游戏名称")
+    @ExcelProperty("${InfoRespVO_name}")
     private String gameName;
 
     @Schema(description = "游戏CODE")
-    @ExcelProperty("游戏CODE")
+    @ExcelProperty("${InfoRespVO_code}")
     private String gameCode;
 
     @Schema(description = "游戏分类", example = "5186")
-    @ExcelProperty(value = "游戏分类", converter = DictConvert.class)
+
     @Trans(type = TransType.SIMPLE, target = CategoryDO.class, ref = "cateTitle", fields = "title")
     private Long cateId;
 
+    @ExcelProperty(value = "${InfoRespVO_cate_title}")
     private String cateTitle;
     /**
      * 游戏小类
      */
     @Trans(type = TransType.SIMPLE, target = CategorySubDO.class, ref = "subCateTitle", fields = "title")
     private Long subCateId;
-
+    @ExcelProperty(value = "${InfoRespVO_sub_cate_title}")
     private String subCateTitle;
 
     @Schema(description = "封面")
-    @ExcelProperty("封面")
+    @ExcelProperty("${InfoRespVO_logo}")
     private String logo;
 
     @Schema(description = "排序")
-    @ExcelProperty("排序")
+    @ExcelProperty("${InfoRespVO_sort}")
     private Integer sort;
 
     @Schema(description = "维护状态", requiredMode = Schema.RequiredMode.REQUIRED)
-    @ExcelProperty("维护状态")
+    @ExcelProperty("${InfoRespVO_maintain}")
     private Integer maintain;
 
     @Schema(description = "创建时间")
-    @ExcelProperty("创建时间")
+    @ExcelProperty("${createTime}")
     private LocalDateTime createTime;
 
     @Schema(description = "在线人数", example = "4553")
-    @ExcelProperty("在线人数")
+    @ExcelProperty("${InfoRespVO_onlineCount}")
     private Integer onlineCount;
 
     @Schema(description = "备注", example = "你说的对")
-    @ExcelProperty("备注")
+    @ExcelProperty("${remark}")
     private String remark;
     /**
      * 状态
      */
-    @ExcelProperty("状态")
+    @ExcelProperty("${status}")
     @DictFormat(DictTypeConstants.COMMON_STATUS)
     private Integer status;
 
@@ -87,12 +89,12 @@ public class InfoRespVO implements TransPojo {
     /**
      * 支持语言
      */
-    @ExcelProperty("语言")
+    @ExcelProperty(value = "${InfoRespVO_supportLang}",converter = StringListConverter.class)
     private List<String> supportLang;
     /**
      * 当前货币
      */
-    @ExcelProperty("货币")
+    @ExcelProperty(value = "${InfoRespVO_supportCurrency}",converter = StringListConverter.class)
     private List<String> supportCurrency;
 
     /**

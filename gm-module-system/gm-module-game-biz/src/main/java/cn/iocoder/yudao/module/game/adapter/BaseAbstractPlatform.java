@@ -178,6 +178,7 @@ public abstract class BaseAbstractPlatform implements IPlatform {
         game.setCreateTime(LocalDateTime.now());
         game.setTenantId(tenantId);
         game.setVendorCode(ctx.getVendorCode());
+        game.setCurrency(ctx.getWrapCurrency());
         recordsMapper.insert(game);
 
         return id;

@@ -139,6 +139,7 @@ public class VendorUserServiceImpl implements VendorUserService {
         vendorUser.setTenantId(tenant.getId());
         vendorUser.setTenantCode(tenant.getCode());
         vendorUser.setTenantName(tenant.getName());
+        vendorUser.setCurrency(currency);
 
         boolean exists = vendorUserMapper.exists(Wrappers.<VendorUserDO>lambdaQuery()
                 .eq(VendorUserDO::getUsername, username)

@@ -228,3 +228,6 @@ yudao:
       - iot:device
       - iot:thing_model_list
 debug: false
+
+merchant:
+  domain: https://api-merchant-dev.iaming-fun.com

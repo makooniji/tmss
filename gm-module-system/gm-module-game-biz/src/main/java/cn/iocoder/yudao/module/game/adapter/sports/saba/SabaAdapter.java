@@ -81,10 +81,10 @@ public class SabaAdapter extends BaseSportAdapter {
             return doBalance(changeType, param, ctx);
 
         }
-        boolean idled = super.idleRecord(ctx.getTransferId(), param.getExtraData());
-        if (!idled) {
-            return buildIdleResult(ctx);
-        }
+//        boolean idled = super.idleRecord(ctx.getTransferId(), param.getExtraData());
+//        if (!idled) {
+//            return buildIdleResult(ctx);
+//        }
 
 
         if (changeType == ActionEnum.MARKETPLACE) {
@@ -145,7 +145,7 @@ public class SabaAdapter extends BaseSportAdapter {
                             super.updateRecord(record);
 
 
-                            GameStaticDTO.buildBet(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getBetAmount(),ctx.getCurrency());
+                            GameStaticDTO.buildBet(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getBetAmount(),ctx.getWrapCurrency());
 
                             return record.getId();
                         },
@@ -192,7 +192,7 @@ public class SabaAdapter extends BaseSportAdapter {
 
                             super.updateRecord(record);
 
-                            GameStaticDTO.buildBet(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getBetAmount(),ctx.getCurrency());
+                            GameStaticDTO.buildBet(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getBetAmount(),ctx.getWrapCurrency());
 
                             return record.getId();
                         },
@@ -219,7 +219,7 @@ public class SabaAdapter extends BaseSportAdapter {
                             super.updateRecord(record);
 
 
-                            GameStaticDTO.buildRefund(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getBetAmount(),ctx.getCurrency());
+                            GameStaticDTO.buildRefund(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getBetAmount(),ctx.getWrapCurrency());
 
                             return record.getId();
                         },
@@ -266,7 +266,7 @@ public class SabaAdapter extends BaseSportAdapter {
 
                                         updates.add(record);
 
-                                        GameStaticDTO.buildPayout(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getWinAmount(), record.getWinLoss(), record.getWinAmount().compareTo(record.getBetAmount()) > 0,ctx.getCurrency());
+                                        GameStaticDTO.buildPayout(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getWinAmount(), record.getWinLoss(), record.getWinAmount().compareTo(record.getBetAmount()) > 0,ctx.getWrapCurrency());
 
                                         return record.getId();
                                     },
@@ -314,7 +314,7 @@ public class SabaAdapter extends BaseSportAdapter {
                                         record.setRemark(ActionEnum.UNSETTLE.getDesc());
                                         record.setAction(ActionEnum.UNSETTLE);
 
-                                        GameStaticDTO.buildUnSettle(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getWinAmount(), record.getWinAmount().compareTo(record.getBetAmount()) > 0,ctx.getCurrency());
+                                        GameStaticDTO.buildUnSettle(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getWinAmount(), record.getWinAmount().compareTo(record.getBetAmount()) > 0,ctx.getWrapCurrency());
 
                                         record.setWinAmount(BigDecimal.ZERO);
                                         updates.add(record);
@@ -367,7 +367,7 @@ public class SabaAdapter extends BaseSportAdapter {
                                         record.setAction(ActionEnum.RESETTLE);
 
 
-                                        GameStaticDTO.buildPayout(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getWinAmount(), record.getWinLoss(), record.getWinLoss().doubleValue() > 0,ctx.getCurrency());
+                                        GameStaticDTO.buildPayout(ctx.getUser(), ctx.getGameVendor(), gameInfoDO, record.getWinAmount(), record.getWinLoss(), record.getWinLoss().doubleValue() > 0,ctx.getWrapCurrency());
                                         updates.add(record);
                                         return record.getId();
                                     },
@@ -470,7 +470,8 @@ public class SabaAdapter extends BaseSportAdapter {
         ctx.setTransferId(param.getExtraData().getOrDefault("operationId", "").toString());
         ctx.setPullUsername(param.getExtraData().getOrDefault("userId", "").toString());
         ctx.setOrderId(param.getExtraData().getOrDefault("refId", "").toString());
-        ctx.setCurrency(param.getExtraData().getOrDefault("currency", "").toString());
+        ctx.setCurrency("82");
+//        ctx.setCurrency(param.getExtraData().getOrDefault("currency", "82").toString());
         ctx.setRoundId(param.getExtraData().getOrDefault("roundId", "").toString());
         ctx.setTxns(JsonUtils.toJsonString(param.getExtraData().getOrDefault("txns", "[]")));
         ctx.setTimestamp(Instant.now().toEpochMilli());
@@ -535,8 +536,8 @@ public class SabaAdapter extends BaseSportAdapter {
         /**
          * 121 PKR 巴基斯坦卢比 1:1
          */
-//        CurrencyEnum currencyEnum = CurrencyEnum.fromCode(request.getCurrency());
-        params.put("currency", request.getCurrency());
+        //CurrencyEnum currencyEnum = CurrencyEnum.fromCode(request.getCurrency());
+        params.put("currency", 20);
         params.put("maxtransfer", 9999999999L);
         params.put("mintransfer", 0L);
 
@@ -632,7 +633,7 @@ public class SabaAdapter extends BaseSportAdapter {
         DSBetRequest.setBetType(1);
         DSBetRequest.setOddsType(String.valueOf(oddsType));
         DSBetRequest.setOdds(BigDecimal.valueOf(odds));
-        DSBetRequest.setRoundId(IdUtil.nanoId());
+        DSBetRequest.setRoundId(orderId);
         DSBetRequest.setBetContent(betContentObj.toJSONString());
         return DSBetRequest;
     }
@@ -658,7 +659,7 @@ public class SabaAdapter extends BaseSportAdapter {
         dsBalance.setBetType(2);
         dsBalance.setCreditAmount(totalBetAmount.negate());
         dsBalance.setTimestamp(context.getTimestamp());
-        dsBalance.setRoundId(IdUtil.nanoId());
+        dsBalance.setRoundId(transferId);
 
         Integer oddsType = 999;
         Double odds = 0.0;
@@ -757,6 +758,7 @@ public class SabaAdapter extends BaseSportAdapter {
                 dsBalance.setTransactionId(transferId);
                 dsBalance.setExternalTransactionId(orderId);
                 dsBalance.setBetId(orderId);
+                dsBalance.setRoundId(orderId);
                 dsBalance.setBetAmount(record.getBetAmount());
                 dsBalance.setGameCode(gameCode());
                 dsBalance.setNewBetAmount(BigDecimal.valueOf(newBetAmount));
@@ -801,6 +803,7 @@ public class SabaAdapter extends BaseSportAdapter {
                 dsBalance.setBetId(orderId);
                 dsBalance.setCreditAmount(BigDecimal.valueOf(transferAmount));
                 dsBalance.setGameCode(gameCode());
+                dsBalance.setRoundId(orderId);
                 result.add(dsBalance);
             }
         }
@@ -839,7 +842,7 @@ public class SabaAdapter extends BaseSportAdapter {
                 dsBalance.setBetId(orderId);
                 dsBalance.setGameCode(gameCode());
                 dsBalance.setWinAmount(BigDecimal.valueOf(payout));
-
+                dsBalance.setRoundId(orderId);
                 dsBalance.setEffectiveTurnover(record.getBetAmount());
                 dsBalance.setCreditAmount(BigDecimal.valueOf(transferAmount));
 
@@ -879,6 +882,7 @@ public class SabaAdapter extends BaseSportAdapter {
                 dsBalance.setBetId(orderId);
                 dsBalance.setGameCode(gameCode());
                 dsBalance.setCreditAmount(BigDecimal.valueOf(transferAmount));
+                dsBalance.setRoundId(orderId);
 
                 result.add(dsBalance);
             }
@@ -914,6 +918,7 @@ public class SabaAdapter extends BaseSportAdapter {
                 reSettle.setWinAmount(BigDecimal.valueOf(payout));
                 reSettle.setNewWinAmount(reSettle.getWinAmount());
                 reSettle.setCreditAmount(BigDecimal.valueOf(creditAmount));
+                reSettle.setRoundId(orderId);
 
                 result.add(reSettle);
             }
@@ -944,7 +949,8 @@ public class SabaAdapter extends BaseSportAdapter {
                 dsBalance.setExternalTransactionId(orderId);
                 dsBalance.setAmount(BigDecimal.valueOf(transferAmount));
                 dsBalance.setGameCode("SABA_2");
-                dsBalance.setRoundId(IdUtil.nanoId());
+                dsBalance.setRoundId(orderId);
+
 
                 return dsBalance;
             }

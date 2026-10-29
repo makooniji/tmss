@@ -6,6 +6,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpDownloader;
 import cn.hutool.http.HttpUtil;
+import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.infra.service.file.FileService;
 import cn.iocoder.yudao.module.system.mapper.GameInfoMapper;
@@ -15,15 +16,19 @@ import cn.iocoder.yudao.module.system.model.tenant.TenantDO;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
+import jakarta.annotation.security.PermitAll;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,6 +42,20 @@ import java.util.stream.Collectors;
 @RunWith(SpringRunner.class)
 @Slf4j
 public class DefaultTest {
+
+
+
+    @Value("${merchant.domain}")
+    private String merchantDomain;
+
+    @Test
+    public void supportIcon() {
+        String path= merchantDomain+"/api/client/tenant/get-browser-icon";
+        String body = HttpUtil.get(path);
+        JSONObject s = JSONObject.parseObject(body);
+        String data = s.getString("data");
+        log.info(data);
+    }
 
 
     @Resource

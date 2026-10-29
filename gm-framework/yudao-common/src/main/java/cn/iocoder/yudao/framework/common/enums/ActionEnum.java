@@ -10,7 +10,7 @@ public enum ActionEnum {
     HEALTHCHECK("/healthcheck",-1,"","/healthcheck","/healthcheck"),
     BALANCE("/GetBalance", -1, "查询余额", "/wallet/balance", "/wallet/balance"),
     BET("/PlaceBet", 0, "投注", "/wallet/bet", "/sports/bet"),
-    BET_UPDATE("/ConfirmBet", 0, "确认投注", "/wallet/update_bet", "/sports/update_bet"),
+    BET_UPDATE("/ConfirmBet", 0, "确认投注", "/wallet/update_bet", "/sports/update-bet"),
     REFUND("/CancelBet", 3,"退款","/wallet/rollback","/sports/refund"),
     ADJUSTMENT("/AdjustBalance", -1, "赠送", "/wallet/adjustment", "/sports/adjustment"),
     SETTLED("/Settle", 1, "结算", "/wallet/bet_result", "/sports/settled"),
@@ -26,11 +26,8 @@ public enum ActionEnum {
     private final String action;
     /**
      * 0 = 未结算的下注
-     * <p>
      * 1 = 已结算的下注
-     * <p>
      * 2 = 取消的下注
-     * <p>
      * 3 = 退款的下注
      */
     @EnumValue

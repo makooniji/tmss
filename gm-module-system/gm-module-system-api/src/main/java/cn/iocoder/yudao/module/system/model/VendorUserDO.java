@@ -56,4 +56,6 @@ public class VendorUserDO extends BaseDO {
 
     private String tenantName;
 
+    private String currency;
+
 }

@@ -82,6 +82,12 @@ public class NotifyController {
         if (ObjectUtil.isEmpty(vendorTenant)) {
             return PlatformResponse.error(PlatformCodeEnum.INVALID_VENDOR);
         }
+        if(ObjectUtil.isNotEmpty(vendorTenant.getIpAddress())){
+            String clientIP = ServletUtils.getClientIP();
+            if (!vendorTenant.getIpAddress().contains(clientIP)) {
+                throw new GameException(PlatformCodeEnum.API_IP_BLOCKED);
+            }
+        }
 
 
         IPlatform bean = gamingPlatformFactory.getPlatform(vendorTenant.getAdapter());
@@ -136,6 +142,13 @@ public class NotifyController {
         if (ObjectUtil.isEmpty(vendorTenant)) {
             return PlatformResponse.error(PlatformCodeEnum.TENANT_ERROR);
         }
+        if(ObjectUtil.isNotEmpty(vendorTenant.getIpAddress())){
+            String clientIP = ServletUtils.getClientIP();
+            if (!vendorTenant.getIpAddress().contains(clientIP)) {
+                throw new GameException(PlatformCodeEnum.API_IP_BLOCKED);
+            }
+        }
+
         IPlatform bean = gamingPlatformFactory.getPlatform(vendorTenant.getAdapter());
         if (ObjectUtil.isEmpty(bean)) {
             log.error("游戏回调获取平台失败 vendorCode={}, adapter={}", vendorCode, vendorTenant.getAdapter());
@@ -204,10 +217,14 @@ public class NotifyController {
             String mch = paramMap.get("AppID");
             vendorTenant= vendorService.getSubAgentByCode(vendorCode,mch);
         }
-
-
         if (ObjectUtil.isEmpty(vendorTenant)) {
             return PlatformResponse.error(PlatformCodeEnum.TENANT_ERROR);
+        }
+        if(ObjectUtil.isNotEmpty(vendorTenant.getIpAddress())){
+            String clientIP = ServletUtils.getClientIP();
+            if (!vendorTenant.getIpAddress().contains(clientIP)) {
+                throw new GameException(PlatformCodeEnum.API_IP_BLOCKED);
+            }
         }
         IPlatform bean = gamingPlatformFactory.getPlatform(vendorTenant.getAdapter());
         if (ObjectUtil.isEmpty(bean)) {

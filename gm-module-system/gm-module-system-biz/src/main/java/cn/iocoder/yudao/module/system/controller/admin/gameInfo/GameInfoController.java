@@ -6,6 +6,7 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
+import cn.iocoder.yudao.framework.translate.core.TranslateUtils;
 import cn.iocoder.yudao.module.system.model.vo.gameinfo.InfoPageReqVO;
 import cn.iocoder.yudao.module.system.model.vo.gameinfo.InfoRespVO;
 import cn.iocoder.yudao.module.system.model.vo.gameinfo.InfoSaveReqVO;
@@ -100,7 +101,7 @@ public class GameInfoController {
         List<GameInfoDO> list = gameInfoService.getInfoPage(pageReqVO).getList();
         // 导出 Excel
         ExcelUtils.write(response, "游戏信息.xls", "数据", InfoRespVO.class,
-                        BeanUtils.toBean(list, InfoRespVO.class));
+                TranslateUtils.translate(   BeanUtils.toBean(list, InfoRespVO.class)));
     }
 
 }
